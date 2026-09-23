@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-23T00:00:00Z",
+  "title": "Design System: Tidy",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary violet",
+        "tonalRamp": [
+          "oklch(15% 0.12 290)",
+          "oklch(25% 0.12 290)",
+          "oklch(35% 0.12 290)",
+          "oklch(45% 0.12 290)",
+          "oklch(60% 0.12 290)",
+          "oklch(75% 0.12 290)",
+          "oklch(87% 0.12 290)",
+          "oklch(95% 0.12 290)"
+        ]
+      },
+      "light-violet": {
+        "role": "secondary",
+        "displayName": "Light violet",
+        "tonalRamp": [
+          "oklch(15% 0.12 290)",
+          "oklch(25% 0.12 290)",
+          "oklch(35% 0.12 290)",
+          "oklch(45% 0.12 290)",
+          "oklch(60% 0.12 290)",
+          "oklch(75% 0.12 290)",
+          "oklch(87% 0.12 290)",
+          "oklch(95% 0.12 290)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Lavender ground",
+        "tonalRamp": [
+          "oklch(15% 0.015 300)",
+          "oklch(25% 0.015 300)",
+          "oklch(35% 0.015 300)",
+          "oklch(45% 0.015 300)",
+          "oklch(60% 0.015 300)",
+          "oklch(75% 0.015 300)",
+          "oklch(87% 0.015 300)",
+          "oklch(95% 0.015 300)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Raised lavender",
+        "tonalRamp": [
+          "oklch(15% 0.015 300)",
+          "oklch(25% 0.015 300)",
+          "oklch(35% 0.015 300)",
+          "oklch(45% 0.015 300)",
+          "oklch(60% 0.015 300)",
+          "oklch(75% 0.015 300)",
+          "oklch(87% 0.015 300)",
+          "oklch(95% 0.015 300)"
+        ]
+      },
+      "primary-text": {
+        "role": "neutral",
+        "displayName": "Deep ink",
+        "tonalRamp": [
+          "oklch(15% 0.015 300)",
+          "oklch(25% 0.015 300)",
+          "oklch(35% 0.015 300)",
+          "oklch(45% 0.015 300)",
+          "oklch(60% 0.015 300)",
+          "oklch(75% 0.015 300)",
+          "oklch(87% 0.015 300)",
+          "oklch(95% 0.015 300)"
+        ]
+      },
+      "secondary-text": {
+        "role": "neutral",
+        "displayName": "Soft ink",
+        "tonalRamp": [
+          "oklch(15% 0.015 300)",
+          "oklch(25% 0.015 300)",
+          "oklch(35% 0.015 300)",
+          "oklch(45% 0.015 300)",
+          "oklch(60% 0.015 300)",
+          "oklch(75% 0.015 300)",
+          "oklch(87% 0.015 300)",
+          "oklch(95% 0.015 300)"
+        ]
+      },
+      "pink": {
+        "role": "secondary",
+        "displayName": "Photo pink",
+        "tonalRamp": [
+          "oklch(15% 0.12 350)",
+          "oklch(25% 0.12 350)",
+          "oklch(35% 0.12 350)",
+          "oklch(45% 0.12 350)",
+          "oklch(60% 0.12 350)",
+          "oklch(75% 0.12 350)",
+          "oklch(87% 0.12 350)",
+          "oklch(95% 0.12 350)"
+        ]
+      },
+      "sky": {
+        "role": "secondary",
+        "displayName": "Screenshot sky",
+        "tonalRamp": [
+          "oklch(15% 0.12 235)",
+          "oklch(25% 0.12 235)",
+          "oklch(35% 0.12 235)",
+          "oklch(45% 0.12 235)",
+          "oklch(60% 0.12 235)",
+          "oklch(75% 0.12 235)",
+          "oklch(87% 0.12 235)",
+          "oklch(95% 0.12 235)"
+        ]
+      },
+      "emerald": {
+        "role": "secondary",
+        "displayName": "Reassuring emerald",
+        "tonalRamp": [
+          "oklch(15% 0.12 165)",
+          "oklch(25% 0.12 165)",
+          "oklch(35% 0.12 165)",
+          "oklch(45% 0.12 165)",
+          "oklch(60% 0.12 165)",
+          "oklch(75% 0.12 165)",
+          "oklch(87% 0.12 165)",
+          "oklch(95% 0.12 165)"
+        ]
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "Advisory amber",
+        "tonalRamp": [
+          "oklch(15% 0.12 80)",
+          "oklch(25% 0.12 80)",
+          "oklch(35% 0.12 80)",
+          "oklch(45% 0.12 80)",
+          "oklch(60% 0.12 80)",
+          "oklch(75% 0.12 80)",
+          "oklch(87% 0.12 80)",
+          "oklch(95% 0.12 80)"
+        ]
+      },
+      "destructive": {
+        "role": "destructive",
+        "displayName": "Destructive red",
+        "tonalRamp": [
+          "oklch(15% 0.12 20)",
+          "oklch(25% 0.12 20)",
+          "oklch(35% 0.12 20)",
+          "oklch(45% 0.12 20)",
+          "oklch(60% 0.12 20)",
+          "oklch(75% 0.12 20)",
+          "oklch(87% 0.12 20)",
+          "oklch(95% 0.12 20)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Nunito storage statistic",
+        "purpose": "Major storage and result values."
+      },
+      "body": {
+        "displayName": "DM Sans content",
+        "purpose": "Labels, information and actions."
+      }
+    },
+    "shadows": [
+      {
+        "name": "clay-raised",
+        "value": "8px 12px 24px #b7a8cf30,-5px -5px 15px #ffffffcf,inset -2px -3px 5px #d7cbea55,inset 2px 2px 3px #fff",
+        "purpose": "Raised cards and secondary buttons."
+      },
+      {
+        "name": "clay-pressed",
+        "value": "inset 3px 4px 8px #c8b9dc60,inset -3px -3px 8px #fff",
+        "purpose": "Recessed inputs and segmented controls."
+      }
+    ],
+    "motion": [
+      {
+        "name": "spring",
+        "value": "cubic-bezier(.22,1,.36,1)",
+        "purpose": "Brief soft press and navigation."
+      },
+      {
+        "name": "press-duration",
+        "value": "200ms",
+        "purpose": "Button compression, disabled by Reduce Motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-board",
+        "value": "650px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "ClayButton · primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Proceed to the next non-destructive step.",
+      "html": "<button class=\"ds-button\">Review Cleanup</button>",
+      "css": ".ds-button{min-height:54px;border:0;border-radius:20px;padding:14px 18px;font:700 15px 'DM Sans',sans-serif;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1)}.ds-button:hover{filter:brightness(1.025)}.ds-button:focus-visible{outline:3px solid #7c3aed;outline-offset:3px}.ds-button:active{transform:scale(.965)}.ds-button{color:white;background:linear-gradient(145deg,#a78bfa -35%,#7c3aed 70%);box-shadow:4px 7px 13px #7c3aed30,inset 1px 2px 2px #ffffff65,inset -1px -2px 2px #5222ad35}"
+    },
+    {
+      "name": "ClayButton · destructive",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Explicit approval of reviewed removal.",
+      "html": "<button class=\"ds-button\">Clean 83 Items</button>",
+      "css": ".ds-button{min-height:54px;border:0;border-radius:20px;padding:14px 18px;font:700 15px 'DM Sans',sans-serif;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1)}.ds-button:hover{filter:brightness(1.025)}.ds-button:focus-visible{outline:3px solid #7c3aed;outline-offset:3px}.ds-button:active{transform:scale(.965)}.ds-button{color:white;background:#c52b3a;box-shadow:3px 6px 12px #bd293429,inset 1px 1px 2px #ffffff60}"
+    },
+    {
+      "name": "ClayButton · secondary",
+      "kind": "button",
+      "description": "Reversible supporting action or cancellation.",
+      "html": "<button class=\"ds-button\">Cancel</button>",
+      "css": ".ds-button{min-height:54px;border:0;border-radius:20px;padding:14px 18px;font:700 15px 'DM Sans',sans-serif;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1)}.ds-button:hover{filter:brightness(1.025)}.ds-button:focus-visible{outline:3px solid #7c3aed;outline-offset:3px}.ds-button:active{transform:scale(.965)}.ds-button{color:#6930b8;background:#eee7f9;box-shadow:8px 12px 24px #b7a8cf30,-5px -5px 15px #ffffffcf,inset -2px -3px 5px #d7cbea55,inset 2px 2px 3px #fff}"
+    },
+    {
+      "name": "ClayCard",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A softly raised container.",
+      "html": "<div class=\"ds-card\"><strong>Your library, your choice.</strong><p>Nothing gets deleted without your approval.</p></div>",
+      "css": ".ds-card{border-radius:30px;padding:20px;background:#f9f7fd;color:#332f3a;box-shadow:8px 12px 24px #b7a8cf30,-5px -5px 15px #ffffffcf,inset -2px -3px 5px #d7cbea55,inset 2px 2px 3px #fff;font:15px/1.55 'DM Sans',sans-serif}.ds-card strong{font:800 18px Nunito,sans-serif}.ds-card p{color:#635f69;margin:10px 0 0}"
+    },
+    {
+      "name": "Badge · suggested keeper",
+      "kind": "chip",
+      "description": "An advisory recommendation, not a locked keeper.",
+      "html": "<span class=\"ds-badge\"><svg viewBox=\"0 0 24 24\"><path d=\"m5 12 4 4L19 6\"/></svg>Suggested to Keep</span>",
+      "css": ".ds-badge{display:inline-flex;gap:5px;align-items:center;padding:7px 10px;border-radius:20px;background:#d7f1e6;color:#14674a;font:700 11px 'DM Sans',sans-serif}.ds-badge svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}"
+    },
+    {
+      "name": "SelectionControl",
+      "kind": "button",
+      "description": "Visible checkmark and semantic pressed state.",
+      "html": "<button class=\"ds-select\" aria-pressed=\"true\" aria-label=\"Deselect photo\"><svg viewBox=\"0 0 24 24\"><path d=\"m5 12 4 4L19 6\"/></svg></button>",
+      "css": ".ds-select{height:44px;width:44px;border-radius:50%;border:2px solid #fff;background:#7c3aed;color:#fff;cursor:pointer}.ds-select svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.5;fill:none}.ds-select:hover{background:#6927d0}.ds-select:focus-visible{outline:3px solid #332f3a;outline-offset:3px}.ds-select:active{transform:scale(.96)}"
+    },
+    {
+      "name": "FilterChip",
+      "kind": "chip",
+      "description": "Raised selected option within a pressed control.",
+      "html": "<div class=\"ds-filters\"><button aria-pressed=\"true\">All</button><button aria-pressed=\"false\">Duplicates</button><button aria-pressed=\"false\">Similar</button></div>",
+      "css": ".ds-filters{display:flex;gap:6px;background:#e9e1f2;padding:5px;border-radius:17px;box-shadow:inset 3px 4px 8px #c8b9dc60,inset -3px -3px 8px #fff}.ds-filters button{flex:1;min-height:44px;border:0;border-radius:12px;background:transparent;color:#60536e;font:12px 'DM Sans',sans-serif;cursor:pointer}.ds-filters button[aria-pressed=true]{background:#faf7ff;color:#6b32bd;box-shadow:2px 3px 7px #baa8d13b;font-weight:700}.ds-filters button:focus-visible{outline:3px solid #7c3aed}.ds-filters button:hover{background:#faf7ff}"
+    },
+    {
+      "name": "StorageRing",
+      "kind": "custom",
+      "description": "An illustrated proportion paired with readable storage text.",
+      "html": "<div class=\"ds-ring\" role=\"img\" aria-label=\"94.6 GB used of 128 GB\"><span><strong>94.6</strong><small>GB used</small></span></div>",
+      "css": ".ds-ring{position:relative;width:148px;height:148px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from -90deg,#a78bfa 0%,#7c3aed 55%,#cf75b1 74%,#e3d9f0 0);box-shadow:5px 8px 15px #9174b32b,-3px -3px 8px #fff,inset 2px 3px 4px #ffffff80}.ds-ring:before{content:'';position:absolute;inset:17px;background:#f4f1fa;border-radius:50%;box-shadow:inset 4px 5px 9px #ad97c630}.ds-ring span{position:relative;text-align:center;color:#332f3a}.ds-ring strong{display:block;font:900 27px Nunito,sans-serif}.ds-ring small{font:11px 'DM Sans',sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Soft, premium digital clay",
+    "overview": "Tidy is tactile, dimensional and reassuring. Its material is matte silicone: broad soft highlights, tinted reflections and gently pressed controls. Nunito brings warmth to titles and numbers while DM Sans keeps file details readable.\n\nThe product stays a storage utility first. Photo content, explicit selection states and visible review totals carry the experience. The visual identity follows the user's pinned palette and typography.",
+    "keyCharacteristics": [
+      "Soft dimensional surfaces.",
+      "Clear file comparison and selection.",
+      "Familiar iOS navigation and explicit confirmation.",
+      "Restrained category color within a lavender ground."
+    ],
+    "rules": [
+      {
+        "name": "The Destructive Role Rule",
+        "body": "Red is reserved for actions that remove or combine explicitly reviewed records. Standard review and navigation stay violet.",
+        "section": "colors"
+      },
+      {
+        "name": "The Separate States Rule",
+        "body": "Discovered content is not selected content. Selection does not authorize deletion. Approval creates the processing queue.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do show literal storage numbers next to charts.",
+      "Do keep selections intact through previews, category edits and canceled confirmations.",
+      "Do make uncertain findings advisory and keepers changeable.",
+      "Do use the native platform APIs in the production application."
+    ],
+    "donts": [
+      "Don't surround screens with device mockups or presentation cards.",
+      "Don't use color alone to indicate selection.",
+      "Don't turn discovery into automatic selection or deletion.",
+      "Don't present browser simulations as real authentication, permissions or storage operations."
+    ]
+  }
+}
