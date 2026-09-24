@@ -15,16 +15,18 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
   private var snapshot: [String: Any] = ["phase": "idle"]
   private var resourceRequest: PHAssetResourceDataRequestID?
   private var imageRequest: PHImageRequestID?
+  private var photoObserverRegistered = false
   private let contacts = CNContactStore()
   private var contactObserver: NSObjectProtocol?
 
   override init() {
     super.init()
-    PHPhotoLibrary.shared().register(self)
     contactObserver = NotificationCenter.default.addObserver(forName: .CNContactStoreDidChange, object: nil, queue: nil) { [weak self] _ in self?.invalidate() }
   }
   deinit {
-    PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    if photoObserverRegistered {
+      PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    }
     if let observer = contactObserver { NotificationCenter.default.removeObserver(observer) }
   }
   func photoLibraryDidChange(_ changeInstance: PHChange) { invalidate() }
@@ -172,6 +174,12 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
     } catch { base["storageError"] = "Storage capacity is unavailable: \(error.localizedDescription)" }
     guard readable(permissions["photos"]) || readable(permissions["contacts"]) else {
       base["phase"] = "permissionDenied"; publish(base, version: version); return
+    }
+    // Do not touch PhotoKit during app or scanner startup. Register only once a
+    // user explicitly starts scanning and Photos authorization is already known.
+    if readable(permissions["photos"]) && !photoObserverRegistered {
+      PHPhotoLibrary.shared().register(self)
+      photoObserverRegistered = true
     }
     var media = [[String: Any]]()
     var pairs = [[String]]()
