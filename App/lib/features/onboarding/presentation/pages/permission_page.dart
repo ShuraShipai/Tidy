@@ -32,7 +32,7 @@ class PermissionPage extends ConsumerWidget {
       if (photos) {
         context.push('/onboarding/contacts');
       } else if (await controller.complete() && context.mounted) {
-        context.go('/home');
+        context.go('/home/scan?start=true');
       }
     }
 

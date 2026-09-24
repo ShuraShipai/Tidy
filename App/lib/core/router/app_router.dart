@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/onboarding/models/permission_subject.dart';
-import '../../features/onboarding/presentation/pages/permission_handoff_page.dart';
 import '../../features/onboarding/presentation/pages/permission_page.dart';
+import '../../features/onboarding/presentation/pages/permission_handoff_page.dart';
 import '../../features/onboarding/presentation/pages/privacy_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
+import '../../features/scan/presentation/pages/scan_page.dart';
 import '../widgets/section_placeholder_page.dart';
 import '../widgets/tidy_navigation_shell.dart';
 
@@ -46,6 +47,16 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ],
+      GoRoute(
+        path: '/scan',
+        name: 'scan',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: ScanPage(
+            autoStart: state.uri.queryParameters['start'] == 'true',
+          ),
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             TidyNavigationShell(navigationShell: navigationShell),

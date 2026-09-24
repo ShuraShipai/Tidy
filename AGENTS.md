@@ -10,3 +10,11 @@
 - Treat the 73 frames as screens, states and sheets/dialogs, not 73 routes. Follow the mapping in ARCHITECTURE.md.
 - Work in order: Foundation → Group 1 screens + functionality → test/review/commit → Group 2 → test/review/commit → continue through Group 8. Implement prerequisite safety/error behavior at first use; do not jump ahead to build all screens.
 - At each checkpoint, run analysis and focused tests, review design fidelity and relevant native behavior, then commit only the stage's changes. Preserve unrelated user work. Do not push without a request. Report genuine blockers and source contradictions rather than silently weakening safety or scope.
+
+### Real Data Only
+
+- Never use dummy, mock, or hardcoded user data in the Flutter app.
+- No fake photos, videos, contacts, storage values, scan results, or cleanup results.
+- Until real functionality is connected, use the designed loading, empty, or permission state.
+- Static design assets such as icons, illustrations, and decorative elements are allowed.
+- Data-driven UI must use real device/service data.
