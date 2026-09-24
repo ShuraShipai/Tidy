@@ -44,22 +44,26 @@ abstract final class TidyTheme {
             fontFamily: 'DM Sans',
             fontSize: 15,
             height: 1.55,
+            letterSpacing: 0,
           ),
           bodyMedium: const TextStyle(
             fontFamily: 'DM Sans',
             fontSize: 14,
             height: 1.45,
+            letterSpacing: 0,
           ),
           labelLarge: const TextStyle(
             fontFamily: 'DM Sans',
             fontSize: 14,
             fontWeight: FontWeight.w700,
+            letterSpacing: 0,
           ),
           labelSmall: const TextStyle(
             fontFamily: 'DM Sans',
             fontSize: 12,
             fontWeight: FontWeight.w500,
             height: 1.45,
+            letterSpacing: 0,
           ),
         )
         .apply(

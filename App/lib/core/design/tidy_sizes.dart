@@ -1,0 +1,25 @@
+abstract final class TidySizes {
+  static const double touchTarget = 44;
+  static const double actionHeight = 54;
+  static const double pinnedActionsMinHeight = 600;
+  static const double illustrationHeight = 280;
+  static const double illustrationOrb = 140;
+  static const double splashOrb = 115;
+  static const double splashBottomInset = 70;
+  static const double wordmarkText = 54;
+  static const double welcomeText = 36;
+  static const double privacyText = 33;
+  static const double actionText = 15;
+  static const double backIcon = 20;
+  static const double smallIcon = 19;
+  static const double checklistIcon = 21;
+  static const double companionOrb = 64;
+  static const double sparkIcon = 30;
+  static const double benefitText = 11;
+  static const double onboardingTitleText = 32;
+  static const double onboardingBodyText = 16;
+  static const double onboardingBodyLineHeight = 1.6;
+  static const double orbAspectRatio = 1.035;
+  static const double orbIconRatio = 0.56;
+  static const double orbRadiusRatio = 0.32;
+}

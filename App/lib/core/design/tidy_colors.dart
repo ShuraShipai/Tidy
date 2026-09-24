@@ -13,4 +13,24 @@ abstract final class TidyColors {
   static const Color amber = Color(0xFFF59E0B);
   static const Color destructive = Color(0xFFC52B3A);
   static const Color divider = Color(0xFFE2D9EC);
+  static const Color violetTint = Color(0xFFEDE5F7);
+  static const Color buttonSecondary = Color(0xFFEEE7F9);
+  static const Color violetDeep = Color(0xFF6930B8);
+  static const Color noteBackground = Color(0xFFF0E8FF);
+  static const Color orbVioletLight = Color(0xFFF6F0FF);
+  static const Color orbVioletMid = Color(0xFFAC8BF3);
+  static const Color orbPinkLight = Color(0xFFFFEBF5);
+  static const Color orbPinkMid = Color(0xFFF29AC5);
+  static const Color orbSkyLight = Color(0xFFEAF9FF);
+  static const Color orbSkyMid = Color(0xFF6FCEEC);
+  static const Color orbSkyDeep = Color(0xFF0C89B9);
+  static const Color orbGreenLight = Color(0xFFE8FBF4);
+  static const Color orbGreenMid = Color(0xFF80D5B5);
+  static const Color orbShadow = Color(0x38AA90C9);
+  static const Color clayHighlight = Color(0xB0FFFFFF);
+  static const Color clayReflection = Color(0x30634099);
+  static const Color backgroundVioletGlow = Color(0x70E7DDFA);
+  static const Color backgroundPinkGlow = Color(0x50EEDFED);
+  static const Color backgroundVioletClear = Color(0x00E7DDFA);
+  static const Color backgroundPinkClear = Color(0x00EEDFED);
 }

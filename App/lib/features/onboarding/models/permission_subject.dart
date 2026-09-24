@@ -1,0 +1,1 @@
+enum PermissionSubject { photos, contacts }
