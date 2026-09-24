@@ -10,6 +10,7 @@ import '../../features/onboarding/presentation/pages/privacy_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
 import '../../features/scan/presentation/pages/scan_page.dart';
+import '../../features/contacts/presentation/pages/contacts_page.dart';
 import '../widgets/section_placeholder_page.dart';
 import '../widgets/tidy_navigation_shell.dart';
 
@@ -95,8 +96,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/contacts',
                 name: 'contacts',
-                builder: (context, state) =>
-                    const SectionPlaceholderPage(title: 'Contacts'),
+                builder: (context, state) => const ContactsPage(),
               ),
             ],
           ),

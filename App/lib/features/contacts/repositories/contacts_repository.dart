@@ -1,0 +1,141 @@
+import '../models/contact_record.dart';
+import '../services/contacts_service.dart';
+
+class ContactsRepository {
+  const ContactsRepository(this.service);
+  final ContactsService service;
+  Future<(String, List<ContactRecord>)> read() async {
+    final result = await service.read();
+    return (
+      result['status']! as String,
+      result['contacts']! as List<ContactRecord>,
+    );
+  }
+
+  List<ContactMatchGroup> detect(List<ContactRecord> contacts) {
+    final parent = List<int>.generate(contacts.length, (i) => i);
+    int root(int i) {
+      while (parent[i] != i) {
+        parent[i] = parent[parent[i]];
+        i = parent[i];
+      }
+      return i;
+    }
+
+    final edges = <String, Set<int>>{};
+    for (var i = 0; i < contacts.length; i++) {
+      final c = contacts[i];
+      for (final p in c.phones) {
+        final n = p.replaceAll(RegExp(r'\D'), '');
+        if (n.length >= 7) edges.putIfAbsent('p:$n', () => {}).add(i);
+      }
+      for (final e in c.emails) {
+        final n = e.trim().toLowerCase();
+        if (n.contains('@')) edges.putIfAbsent('e:$n', () => {}).add(i);
+      }
+    }
+    final reasons = <String, Set<String>>{};
+    for (final entry in edges.entries) {
+      final ids = entry.value.toList();
+      for (var x = 0; x < ids.length; x++) {
+        for (var y = x + 1; y < ids.length; y++) {
+          final a = ids[x], b = ids[y];
+          parent[root(a)] = root(b);
+          final k = [contacts[a].id, contacts[b].id]..sort();
+          reasons
+              .putIfAbsent(k.join('|'), () => {})
+              .add(
+                entry.key.startsWith('p:')
+                    ? 'Same phone number'
+                    : 'Same email address',
+              );
+        }
+      }
+    }
+    // A close name match is useful evidence, but remains advisory until the
+    // person reviews both records. Require substantial names to avoid matching
+    // generic initials or one-word entries.
+    for (var a = 0; a < contacts.length; a++) {
+      final left = _name(contacts[a]);
+      if (left.length < 7) continue;
+      for (var b = a + 1; b < contacts.length; b++) {
+        final right = _name(contacts[b]);
+        final difference = (left.length - right.length).abs();
+        if (right.length >= 7 &&
+            left.substring(0, 2) == right.substring(0, 2) &&
+            difference <=
+                (left.length > right.length ? left.length : right.length) *
+                    .18 &&
+            _similarity(left, right) >= .82) {
+          parent[root(a)] = root(b);
+          final pair = [contacts[a].id, contacts[b].id]..sort();
+          reasons.putIfAbsent(pair.join('|'), () => {}).add('Similar name');
+        }
+      }
+    }
+    final groups = <String, List<int>>{};
+    for (var i = 0; i < contacts.length; i++) {
+      final r = root(i);
+      groups.putIfAbsent('$r', () => []).add(i);
+    }
+    final result = <ContactMatchGroup>[];
+    for (final indices in groups.values.where((g) => g.length > 1)) {
+      // Present pairs individually. Transitive groups are not merged wholesale.
+      for (var x = 0; x < indices.length; x++) {
+        for (var y = x + 1; y < indices.length; y++) {
+          final a = contacts[indices[x]],
+              b = contacts[indices[y]],
+              k = [a.id, b.id]..sort();
+          final ev = reasons[k.join('|')] ?? <String>{};
+          if (ev.isNotEmpty) {
+            result.add(ContactMatchGroup(a.id, b.id, ev.toList()));
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  String _name(ContactRecord contact) =>
+      contact.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  double _similarity(String a, String b) {
+    final previous = List<int>.generate(b.length + 1, (i) => i);
+    for (var i = 1; i <= a.length; i++) {
+      var diagonal = previous[0];
+      previous[0] = i;
+      for (var j = 1; j <= b.length; j++) {
+        final above = previous[j];
+        previous[j] = (a[i - 1] == b[j - 1])
+            ? diagonal
+            : 1 +
+                  [
+                    previous[j - 1],
+                    above,
+                    diagonal,
+                  ].reduce((x, y) => x < y ? x : y);
+        diagonal = above;
+      }
+    }
+    return 1 - previous[b.length] / (a.length > b.length ? a.length : b.length);
+  }
+
+  Future<void> merge(
+    ContactRecord keeper,
+    ContactRecord other, {
+    required String givenName,
+    required String familyName,
+    required String organization,
+    required List<String> phones,
+    required List<String> emails,
+  }) => service.merge(
+    keeper,
+    other,
+    givenName: givenName,
+    familyName: familyName,
+    organization: organization,
+    phones: phones,
+    emails: emails,
+  );
+  Future<void> delete(List<ContactRecord> records) => service.delete(records);
+}

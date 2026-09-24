@@ -1,0 +1,58 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:tidy/features/contacts/models/contact_record.dart';
+import 'package:tidy/features/contacts/repositories/contacts_repository.dart';
+import 'package:tidy/features/contacts/services/contacts_service.dart';
+
+ContactRecord contact(
+  String id,
+  String name, {
+  List<String> phones = const [],
+  List<String> emails = const [],
+}) => ContactRecord(
+  id: id,
+  givenName: name,
+  familyName: '',
+  organization: '',
+  phones: phones,
+  emails: emails,
+  version: 'v1',
+);
+
+void main() {
+  final repository = ContactsRepository(ContactsService());
+  test(
+    'discovers exact shared phone and email evidence without selecting records',
+    () {
+      final records = [
+        contact('a', 'Rae Harper', phones: ['+1 (415) 555-0100']),
+        contact(
+          'b',
+          'Rae Harper',
+          phones: ['14155550100'],
+          emails: ['rae@example.com'],
+        ),
+        contact('c', 'Other Person', emails: ['rae@example.com']),
+      ];
+      final matches = repository.detect(records);
+      expect(
+        matches.expand((g) => g.evidence).toSet(),
+        containsAll(['Same phone number', 'Same email address']),
+      );
+      expect(records.map((c) => c.id), ['a', 'b', 'c']);
+    },
+  );
+  test('surfaces close name matches as review evidence', () {
+    final matches = repository.detect([
+      contact('a', 'Amelia Robertson'),
+      contact('b', 'Amelia Robertsson'),
+    ]);
+    expect(matches, hasLength(1));
+    expect(matches.single.evidence, contains('Similar name'));
+  });
+  test('does not suggest contacts from generic one word names alone', () {
+    expect(
+      repository.detect([contact('a', 'Alex'), contact('b', 'Alex')]),
+      isEmpty,
+    );
+  });
+}
