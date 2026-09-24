@@ -71,6 +71,9 @@ class ScanState {
   final String? stage, message, storageError;
   bool get running => phase == ScanPhase.loading || phase == ScanPhase.scanning;
   bool get hasResults => phase == ScanPhase.success || phase == ScanPhase.empty;
+  bool get hasPermissionGaps =>
+      !['authorized', 'limited'].contains(permissions['photos']) ||
+      !['authorized', 'limited'].contains(permissions['contacts']);
   Set<String> get reviewableIds => {
     for (final group in similar) ...group.ids,
     for (final item in media)
@@ -86,5 +89,6 @@ class ScanState {
   int get unknownReviewableSizes =>
       reviewableMedia.where((item) => item.bytes == null).length;
   int get unavailableSizes => media.where((item) => item.bytes == null).length;
-  bool get incomplete => unavailableSizes > 0 || unavailableImages > 0;
+  bool get incomplete =>
+      unavailableSizes > 0 || unavailableImages > 0 || hasPermissionGaps;
 }

@@ -63,7 +63,7 @@ void main() {
       await tap(tester, 'Continue');
       expect(service.requests, 2);
       expect(service.completed, isTrue);
-      expect(location(container), '/home/scan');
+      expect(location(container), '/scan');
     },
   );
 
@@ -189,7 +189,7 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
     await tap(tester, 'Not Now');
-    expect(location(container), '/home/scan');
+    expect(location(container), '/scan');
   });
 
   testWidgets(

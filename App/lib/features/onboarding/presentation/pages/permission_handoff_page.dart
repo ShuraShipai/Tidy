@@ -68,7 +68,7 @@ class PermissionHandoffPage extends ConsumerWidget {
                     context.replace('/onboarding/contacts');
                   } else if (granted) {
                     if (await controller.complete() && context.mounted) {
-                      context.go('/home/scan?start=true');
+                      context.go('/scan?start=true');
                     }
                   } else {
                     back();
@@ -81,7 +81,7 @@ class PermissionHandoffPage extends ConsumerWidget {
                   if (photos) {
                     context.replace('/onboarding/contacts');
                   } else if (await controller.complete() && context.mounted) {
-                    context.go('/home/scan?start=true');
+                    context.go('/scan?start=true');
                   }
                 },
         ),

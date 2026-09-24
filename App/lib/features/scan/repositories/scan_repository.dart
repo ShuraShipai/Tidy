@@ -40,6 +40,9 @@ class ScanRepository {
       ),
     );
     final storage = map['storage'] as Map?;
+    final permissions = Map<String, String>.unmodifiable(
+      (map['permissions'] as Map? ?? {}).cast<String, String>(),
+    );
     final noFindings =
         similar.isEmpty &&
         contacts.isEmpty &&
@@ -47,7 +50,9 @@ class ScanRepository {
     // An incomplete analysis must never assert that the library is clean.
     final complete =
         !media.any((x) => x.bytes == null) &&
-        (map['unavailableImages'] ?? 0) == 0;
+        (map['unavailableImages'] ?? 0) == 0 &&
+        ['authorized', 'limited'].contains(permissions['photos']) &&
+        ['authorized', 'limited'].contains(permissions['contacts']);
     return ScanState(
       phase: phase == ScanPhase.success && noFindings && complete
           ? ScanPhase.empty
@@ -55,9 +60,7 @@ class ScanRepository {
       media: List.unmodifiable(media),
       similar: List.unmodifiable(similar),
       contacts: List.unmodifiable(contacts),
-      permissions: Map.unmodifiable(
-        (map['permissions'] as Map? ?? {}).cast<String, String>(),
-      ),
+      permissions: permissions,
       capacity: storage?['capacity'] as int?,
       free: storage?['free'] as int?,
       used: storage?['used'] as int?,

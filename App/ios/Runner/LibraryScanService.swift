@@ -85,32 +85,56 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
   }
   private func bytes(_ asset: PHAsset, version: Int) -> Int64? {
     let resources = PHAssetResource.assetResources(for: asset)
-    guard !resources.isEmpty else { return nil }
-    var total: Int64 = 0
-    for resource in resources {
+    let preferred: [PHAssetResourceType] = asset.mediaType == .video
+      ? [.video, .fullSizeVideo]
+      : [.photo, .fullSizePhoto]
+    for type in preferred {
+      let matches = resources.filter { $0.type == type }
+      // If iOS reports multiple candidates, don't invent a combined asset size.
+      guard matches.count <= 1 else { return nil }
+      guard let resource = matches.first else { continue }
       guard valid(version) else { return nil }
       let signal = DispatchSemaphore(value: 0)
       let response = ResourceRead()
-      let options = PHAssetResourceRequestOptions(); options.isNetworkAccessAllowed = false
-      let request = PHAssetResourceManager.default().requestData(for: resource, options: options, dataReceivedHandler: { data in
-        response.lock.lock(); response.size += Int64(data.count); response.lock.unlock()
-      }, completionHandler: { error in
-        response.lock.lock(); response.failed = error != nil; response.lock.unlock(); signal.signal()
-      })
-      lock.lock(); resourceRequest = request; let stopNow = cancelled || revision != version; lock.unlock()
+      let options = PHAssetResourceRequestOptions()
+      options.isNetworkAccessAllowed = false
+      let request = PHAssetResourceManager.default().requestData(
+        for: resource,
+        options: options,
+        dataReceivedHandler: { data in
+          response.lock.lock()
+          response.size += Int64(data.count)
+          response.lock.unlock()
+        },
+        completionHandler: { error in
+          response.lock.lock()
+          response.failed = error != nil
+          response.lock.unlock()
+          signal.signal()
+        }
+      )
+      lock.lock()
+      resourceRequest = request
+      let stopNow = cancelled || revision != version
+      lock.unlock()
       if stopNow { PHAssetResourceManager.default().cancelDataRequest(request) }
-      // Bounded wait also handles providers that fail to finish after cancellation.
       if signal.wait(timeout: .now() + 30) == .timedOut {
         PHAssetResourceManager.default().cancelDataRequest(request)
-        lock.lock(); resourceRequest = nil; lock.unlock()
+        lock.lock()
+        resourceRequest = nil
+        lock.unlock()
         return nil
       }
-      lock.lock(); resourceRequest = nil; lock.unlock()
-      response.lock.lock(); let failed = response.failed; let size = response.size; response.lock.unlock()
-      if failed || !valid(version) { return nil }
-      total += size
+      lock.lock()
+      resourceRequest = nil
+      lock.unlock()
+      response.lock.lock()
+      let failed = response.failed
+      let size = response.size
+      response.lock.unlock()
+      return failed || !valid(version) ? nil : size
     }
-    return total
+    return nil
   }
   private func feature(_ asset: PHAsset, version: Int) -> VNFeaturePrintObservation? {
     let options = PHImageRequestOptions()

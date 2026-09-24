@@ -40,6 +40,15 @@ void main() {
       expect(ScanRepository.decode({'phase': phase}).phase.name, phase);
     }
   });
+  test('a denied library prevents a clean result claim', () {
+    final partial = ScanRepository.decode({
+      ...result(),
+      'permissions': {'photos': 'authorized', 'contacts': 'denied'},
+    });
+    expect(partial.phase, ScanPhase.success);
+    expect(partial.hasPermissionGaps, isTrue);
+    expect(partial.incomplete, isTrue);
+  });
   test(
     'unknown bytes and unavailable comparisons never imply a clean library',
     () {

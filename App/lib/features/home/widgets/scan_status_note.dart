@@ -38,7 +38,7 @@ class ScanStatusNote extends StatelessWidget {
           ),
         const SizedBox(height: TidySpacing.sm),
         Text(
-          '${state.reviewableIds.length} media candidates · ${(state.knownReviewableBytes / 1000000000).toStringAsFixed(2)} GB known resource bytes${state.unknownReviewableSizes > 0 ? ' plus ${state.unknownReviewableSizes} unknown sizes' : ''}. Not a promise of freed space.',
+          '${state.reviewableIds.length} media candidates · ${(state.knownReviewableBytes / 1000000000).toStringAsFixed(2)} GB known primary-resource bytes${state.unknownReviewableSizes > 0 ? ' plus ${state.unknownReviewableSizes} unknown sizes' : ''}. This is not total asset storage or a promise of freed space.',
         ),
         Text(
           '${state.contacts.length} possible contact groups in ${state.contactCount} accessible contacts.',
