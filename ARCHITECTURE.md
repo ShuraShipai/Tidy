@@ -4,7 +4,7 @@
 
 Flutter/Dart, iOS-first (iOS 17+), Riverpod and go_router. Use feature-first organization, centralized theme tokens, and repositories backed by services for native/device functionality. Processing and user data stay on-device; no remote backend. Business logic belongs outside widgets.
 
-`App/` already contains ProviderScope, TidyApp, a Riverpod-owned GoRouter, five shell branches, placeholders, bundled Nunito/DM Sans fonts and `core/design/` tokens. Foundation exists but is not a completed feature or a verified visual match. Retain useful work; refine within the foundation checkpoint. In particular, move the meaningful navigation-shell widget out of `app.dart` into `core/widgets/` when implementing that checkpoint.
+`App/` contains ProviderScope, TidyApp, a Riverpod-owned GoRouter, five shell branches, bundled Nunito/DM Sans fonts and `core/design/` tokens. The shared `TidyNavigationShell` lives in `core/widgets/tidy_navigation_shell.dart`; `app.dart` only configures the app/theme/router. Group 01's approved UI is implemented. Home/scanning work is owned by the separate Group 02 checkpoint; Group 01 only navigates to the existing `/home` destination.
 
 The prototype is the visual authority. PRODUCT's HTML/CSS/JavaScript stack describes the prototype only; Flutter is the production stack. Follow [PRD.md](PRD.md) for behavior and [AGENTS.md](AGENTS.md) for permanent rules.
 
@@ -51,6 +51,12 @@ Every meaningful UI component must be implemented in its own `.dart` file. Scree
 ## Navigation and frame mapping
 
 Keep the five existing shell roots: `/home`, `/photos`, `/videos`, `/contacts`, `/settings`. Use go_router branches to preserve tab stacks. Push detail screens with native-feeling back behavior. Keep state in Riverpod, not serialized media objects in routes. Optional tools are secondary destinations.
+
+Group 01 starts at `/onboarding`, which reads local completion and current OS authorization before opening Welcome or the existing Home destination. `/onboarding/welcome`, `/onboarding/privacy`, and `/onboarding/photos` / `contacts` are Cupertino pages; limited, denied, restricted and granted access are states, not extra routes. The corresponding `/request` pages retain the approved handoff layout and launch real iOS requests after Continue. There are no simulation routes. Completion is saved only after finishing or skipping the Contacts step; a failed save remains retryable. Skipping never grants permission. How It Works remains an explicitly unavailable Group 07 connection.
+
+`features/onboarding/controllers/onboarding_controller.dart` owns asynchronous authorization and completion workflows. Its repository wraps `services/onboarding_service.dart`, which uses the `tidy/onboarding` method channel and `ios/Runner/OnboardingNativeService.swift`. Refresh OS status on app resume; never persist it as authority. Serialize requests and completion writes; do not request again when status is already determined. Photos uses read/write authorization and the native limited-library picker. Contacts limited access is supported only where iOS reports it (iOS 18+); managing Contacts access opens app Settings. Restricted access cannot be overridden by Tidy. Unsupported platforms/statuses stay explicitly unsupported.
+
+The only Group 01 persisted value is a versioned completion marker in Application Support, protected on disk and excluded from backup. No additional packages, UserDefaults, media/contact reads, or remote services are needed for this step. Real permissions must still be validated on controlled devices, especially restricted and OS-version-specific limited access.
 
 | Frames | Screen / state / overlay mapping |
 | --- | --- |
@@ -116,4 +122,4 @@ Before proceeding to the next group: run `flutter analyze`; run focused controll
 - PRODUCT's web stack is prototype-specific; the production stack above resolves the documentation gap.
 - Fixed frame dimensions and synthetic storage/history totals are design fixtures, not device promises.
 - The prototype's final vault handler removes selected copies without a separate confirmation dialog. Apply the user's stronger permanent rule: explicit review and confirmation for vault removal too; do not modify the reference.
-- Current Flutter navigation-shell placement does not yet meet the separate meaningful-widget rule. Correct it during foundation work, not by changing this document's rule.
+- Navigation-shell extraction is complete; maintain the shared widget boundary during future groups.

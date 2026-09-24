@@ -16,7 +16,7 @@ class OnboardingActionBar extends StatelessWidget {
   });
 
   final String primaryLabel;
-  final VoidCallback onPrimary;
+  final VoidCallback? onPrimary;
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
   final String? tertiaryLabel;

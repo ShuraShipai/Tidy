@@ -4,6 +4,10 @@ abstract final class TidySizes {
   static const double pinnedActionsMinHeight = 600;
   static const double illustrationHeight = 280;
   static const double illustrationOrb = 140;
+  static const double illustrationShadowWidth = 210;
+  static const double illustrationShadowHeight = 55;
+  static const double illustrationShadowBlur = 20;
+  static const double illustrationShadowRadius = 80;
   static const double splashOrb = 115;
   static const double splashBottomInset = 70;
   static const double wordmarkText = 54;

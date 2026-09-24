@@ -10,12 +10,14 @@ class OnboardingPageFrame extends StatelessWidget {
     required this.body,
     required this.actions,
     this.onBack,
+    this.backEnabled = true,
     super.key,
   });
 
   final Widget body;
   final Widget actions;
   final VoidCallback? onBack;
+  final bool backEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +50,9 @@ class OnboardingPageFrame extends StatelessWidget {
                       height: TidySizes.touchTarget,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: OnboardingBackButton(onPressed: onBack!),
+                        child: OnboardingBackButton(
+                          onPressed: backEnabled ? onBack : null,
+                        ),
                       ),
                     ),
                   Expanded(

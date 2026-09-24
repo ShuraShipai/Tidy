@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Tidy reads the photos you allow to find items for your review. Scanning never changes your library.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Tidy reads accessible phone numbers and email addresses to suggest possible duplicate contacts for review.</string>
+    <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key><true/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

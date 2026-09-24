@@ -1,12 +1,38 @@
 import Flutter
 import UIKit
 import XCTest
+@testable import Runner
 
 class RunnerTests: XCTestCase {
 
-  func testExample() {
-    // If you add code to the Runner application, consider adding tests here.
-    // See https://developer.apple.com/documentation/xctest for more information about using XCTest.
+  func testOnboardingCompletionPersistsAndIsExcludedFromBackup() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("TidyOnboardingTest-" + UUID().uuidString, isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let service = OnboardingNativeService(storageDirectory: directory)
+    var read: Any?
+    service.handle(FlutterMethodCall(methodName: "readCompleted", arguments: nil)) { read = $0 }
+    XCTAssertEqual(read as? Bool, false)
+    var saved = false
+    service.handle(FlutterMethodCall(methodName: "saveCompleted", arguments: nil)) {
+      XCTAssertNil($0)
+      saved = true
+    }
+    XCTAssertTrue(saved)
+    let relaunched = OnboardingNativeService(storageDirectory: directory)
+    relaunched.handle(FlutterMethodCall(methodName: "readCompleted", arguments: nil)) { read = $0 }
+    XCTAssertEqual(read as? Bool, true)
+    let values = try directory.resourceValues(forKeys: [.isExcludedFromBackupKey])
+    XCTAssertEqual(values.isExcludedFromBackup, true)
+  }
+
+  func testUnknownPermissionDoesNotRequestAuthorization() {
+    let service = OnboardingNativeService()
+    var error: FlutterError?
+    service.handle(FlutterMethodCall(methodName: "request", arguments: "unsupported")) {
+      error = $0 as? FlutterError
+    }
+    XCTAssertEqual(error?.code, "invalid_subject")
   }
 
 }

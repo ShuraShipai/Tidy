@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/widgets/tidy_action_button.dart';
 import '../../../../core/widgets/tidy_glyph.dart';
 import '../../../../core/widgets/tidy_orb.dart';
-import '../../controllers/onboarding_preview_controller.dart';
+import '../../controllers/onboarding_controller.dart';
 import '../../models/permission_subject.dart';
 import '../../widgets/onboarding_action_bar.dart';
 import '../../widgets/onboarding_info_note.dart';
@@ -14,15 +13,23 @@ import '../../widgets/onboarding_page_frame.dart';
 
 class PermissionHandoffPage extends ConsumerWidget {
   const PermissionHandoffPage({required this.subject, super.key});
-
   final PermissionSubject subject;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final photos = subject == PermissionSubject.photos;
-    final controller = ref.read(onboardingPreviewProvider.notifier);
+    final state = ref.watch(onboardingProvider);
+    final controller = ref.read(onboardingProvider.notifier);
+    final disabled = state.busy || !state.initialized;
+    ref.listen(onboardingProvider.select((value) => value.error), (_, error) {
+      if (error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
+    });
 
-    void showPermissionState() {
+    void back() {
       if (context.canPop()) {
         context.pop();
       } else {
@@ -30,47 +37,54 @@ class PermissionHandoffPage extends ConsumerWidget {
       }
     }
 
-    return OnboardingPageFrame(
-      onBack: showPermissionState,
-      body: OnboardingMessage(
-        title: photos ? 'Photo access' : 'Contacts access',
-        description: photos ? 'Continue with the iOS permission request.' : '',
-        glyph: photos ? TidyGlyphName.photo : TidyGlyphName.contacts,
-        tone: photos ? TidyOrbTone.pink : TidyOrbTone.green,
-        alignment: TextAlign.left,
-        child: const OnboardingInfoNote(
-          text:
-              'UI preview only · choose an access outcome below. This does not request permissions, open Settings or access device data.',
+    return PopScope(
+      canPop: !state.busy,
+      child: OnboardingPageFrame(
+        backEnabled: !disabled,
+        onBack: back,
+        body: OnboardingMessage(
+          title: photos ? 'Photo access' : 'Contacts access',
+          description: photos
+              ? 'Continue with the iOS permission request.'
+              : '',
+          glyph: photos ? TidyGlyphName.photo : TidyGlyphName.contacts,
+          tone: photos ? TidyOrbTone.pink : TidyOrbTone.green,
+          alignment: TextAlign.left,
+          child: OnboardingInfoNote(
+            text: photos
+                ? 'iOS will ask which photos Tidy can access. You can change access later in Settings.'
+                : 'iOS will ask for Contacts access. You can change access later in Settings.',
+          ),
         ),
-      ),
-      actions: OnboardingActionBar(
-        primaryLabel: photos ? 'Simulate Full Access' : 'Simulate Allowed',
-        onPrimary: () {
-          if (photos) {
-            controller.choosePhotos(PhotoAccessPreview.full);
-            context.replace('/onboarding/contacts');
-          } else {
-            controller.chooseContacts(ContactAccessPreview.allowed);
-            context.go('/home');
-          }
-        },
-        secondaryLabel: photos ? 'Simulate Limited Access' : 'Simulate Denied',
-        secondaryStyle: TidyActionStyle.secondary,
-        onSecondary: () {
-          if (photos) {
-            controller.choosePhotos(PhotoAccessPreview.limited);
-          } else {
-            controller.chooseContacts(ContactAccessPreview.denied);
-          }
-          showPermissionState();
-        },
-        tertiaryLabel: photos ? 'Simulate Denied' : null,
-        onTertiary: photos
-            ? () {
-                controller.choosePhotos(PhotoAccessPreview.denied);
-                showPermissionState();
-              }
-            : null,
+        actions: OnboardingActionBar(
+          primaryLabel: state.busy ? 'Please wait…' : 'Continue',
+          onPrimary: disabled
+              ? null
+              : () async {
+                  final granted = await controller.request(subject);
+                  if (!context.mounted) return;
+                  if (ref.read(onboardingProvider).error != null) return;
+                  if (granted && photos) {
+                    context.replace('/onboarding/contacts');
+                  } else if (granted) {
+                    if (await controller.complete() && context.mounted) {
+                      context.go('/home');
+                    }
+                  } else {
+                    back();
+                  }
+                },
+          secondaryLabel: 'Not Now',
+          onSecondary: disabled
+              ? null
+              : () async {
+                  if (photos) {
+                    context.replace('/onboarding/contacts');
+                  } else if (await controller.complete() && context.mounted) {
+                    context.go('/home');
+                  }
+                },
+        ),
       ),
     );
   }

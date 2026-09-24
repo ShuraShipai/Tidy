@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/design/tidy_colors.dart';
 import '../../../core/design/tidy_sizes.dart';
+import '../../../core/design/tidy_spacing.dart';
 import '../../../core/widgets/tidy_glyph.dart';
 import '../../../core/widgets/tidy_orb.dart';
 
@@ -28,14 +29,19 @@ class OnboardingIllustration extends StatelessWidget {
         alignment: Alignment.center,
         children: <Widget>[
           Positioned(
-            bottom: 14,
+            bottom: TidySpacing.illustrationShadowBottom,
             child: ImageFiltered(
-              imageFilter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              imageFilter: ui.ImageFilter.blur(
+                sigmaX: TidySizes.illustrationShadowBlur,
+                sigmaY: TidySizes.illustrationShadowBlur,
+              ),
               child: Container(
-                width: 210,
-                height: 55,
+                width: TidySizes.illustrationShadowWidth,
+                height: TidySizes.illustrationShadowHeight,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(80),
+                  borderRadius: BorderRadius.circular(
+                    TidySizes.illustrationShadowRadius,
+                  ),
                   color: TidyColors.orbShadow,
                 ),
               ),
@@ -44,30 +50,30 @@ class OnboardingIllustration extends StatelessWidget {
           TidyOrb(glyph: glyph, tone: tone),
           if (showCompanions) ...<Widget>[
             const Positioned(
-              right: 20,
-              top: 55,
+              right: TidySpacing.companionVideoRight,
+              top: TidySpacing.companionVideoTop,
               child: TidyOrb(
                 glyph: TidyGlyphName.video,
                 tone: TidyOrbTone.pink,
-                size: 64,
+                size: TidySizes.companionOrb,
               ),
             ),
             const Positioned(
-              left: 21,
-              top: 145,
+              left: TidySpacing.companionPhotoLeft,
+              top: TidySpacing.companionPhotoTop,
               child: TidyOrb(
                 glyph: TidyGlyphName.photo,
                 tone: TidyOrbTone.sky,
-                size: 64,
+                size: TidySizes.companionOrb,
               ),
             ),
           ],
           const Positioned(
-            right: 59,
-            bottom: 36,
+            right: TidySpacing.illustrationSparkRight,
+            bottom: TidySpacing.illustrationSparkBottom,
             child: TidyGlyph(
               TidyGlyphName.spark,
-              size: 30,
+              size: TidySizes.sparkIcon,
               color: TidyColors.primary,
             ),
           ),

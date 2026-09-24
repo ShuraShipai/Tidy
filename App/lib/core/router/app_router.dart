@@ -39,7 +39,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ),
         GoRoute(
-          path: '/onboarding/${subject.name}/preview',
+          path: '/onboarding/${subject.name}/request',
           pageBuilder: (context, state) => CupertinoPage<void>(
             key: state.pageKey,
             child: PermissionHandoffPage(subject: subject),
