@@ -31,9 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.0.1
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +55,24 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/nunito-bold.ttf
+          weight: 700
+        - asset: assets/fonts/nunito-extrabold.ttf
+          weight: 800
+        - asset: assets/fonts/nunito-black.ttf
+          weight: 900
+    - family: DM Sans
+      fonts:
+        - asset: assets/fonts/dm-regular.ttf
+          weight: 400
+        - asset: assets/fonts/dm-medium.ttf
+          weight: 500
+        - asset: assets/fonts/dm-bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:
