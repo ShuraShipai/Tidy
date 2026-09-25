@@ -78,6 +78,7 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
   Future<void> _compress() async {
     final video = _video;
     if (video == null || _running) return;
+    final profile = Stopwatch()..start();
     setState(() {
       _running = true;
       _error = null;
@@ -90,6 +91,7 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         quality: _quality.name,
         temporaryBytes: (_estimatedBytes ?? video.bytes ?? 0) * 2,
       );
+      final exportWaitStarted = profile.elapsedMilliseconds;
       while (mounted && _jobId != null) {
         await Future<void>.delayed(const Duration(milliseconds: 400));
         final status = await _service.compressionStatus(_jobId!);
@@ -100,11 +102,17 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         if (state == 'completed') {
           _compressedPath = status['path'] as String?;
           _compressedBytes = (status['bytes'] as num?)?.toInt();
-          _originalPreview = await _service.compressionThumbnail(
-            assetId: video.id,
-          );
+          final previewStarted = profile.elapsedMilliseconds;
+          // Reuse the preview requested on page entry; retrieving the same
+          // Photos AVAsset again after export needlessly repeats PhotoKit work.
+          _originalPreview = await _originalPreviewFuture;
           _compressedPreview = await _service.compressionThumbnail(
             path: _compressedPath,
+          );
+          debugPrint(
+            'compression_profile export_wait_ms=${previewStarted - exportWaitStarted} '
+            'preview_pair_ms=${profile.elapsedMilliseconds - previewStarted} '
+            'tap_to_result_ms=${profile.elapsedMilliseconds}',
           );
           if (!mounted) return;
           setState(() {

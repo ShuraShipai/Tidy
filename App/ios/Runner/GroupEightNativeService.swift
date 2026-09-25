@@ -5,6 +5,7 @@ import EventKit
 import Flutter
 import ImageIO
 import LocalAuthentication
+import os
 import Photos
 import Security
 import UIKit
@@ -12,6 +13,10 @@ import WidgetKit
 
 /// Native, on-device services for the optional Group 08 flows.
 final class GroupEightNativeService {
+  private static let compressionLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "Tidy", category: "Compression")
+  private let compressionWorkQueue = DispatchQueue(
+    label: "com.example.tidy.compression-preview", qos: .userInitiated)
   // EventKit truncates predicates longer than four years to their first four
   // years. Keep the rolling range just under that limit so recent events are
   // never lost to a predicate starting at Date.distantPast.
@@ -568,7 +573,9 @@ final class GroupEightNativeService {
       return
     }
     let options = PHVideoRequestOptions(); options.isNetworkAccessAllowed = false; options.deliveryMode = .highQualityFormat
+    let retrievalStarted = ProcessInfo.processInfo.systemUptime
     PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { [weak self] avAsset, _, info in
+      Self.compressionLogger.info("compression_profile avasset_retrieval_ms=\(Int((ProcessInfo.processInfo.systemUptime - retrievalStarted) * 1000))")
       guard let self, let avAsset else {
         DispatchQueue.main.async { result(FlutterError(code: "compression_local_copy_required", message: (info?[PHImageResultIsInCloudKey] as? Bool) == true ? "This video is stored in iCloud and is not available locally for compression." : "The video could not be opened for compression.", details: nil)) }
         return
@@ -583,12 +590,14 @@ final class GroupEightNativeService {
       let job = CompressionJob(id: jobID, session: session, fileURL: output, source: asset,
                                quality: quality, sourceCreated: asset.creationDate, sourceModified: asset.modificationDate)
       self.lock.lock(); self.exports[jobID] = job; self.lock.unlock()
+      let exportStarted = ProcessInfo.processInfo.systemUptime
       session.exportAsynchronously { [weak self] in
         guard let self else { return }
         if session.status == .completed {
           try? FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: output.path)
         }
         self.lock.lock(); job.finished = true; job.error = session.error?.localizedDescription; self.lock.unlock()
+        Self.compressionLogger.info("compression_profile export_ms=\(Int((ProcessInfo.processInfo.systemUptime - exportStarted) * 1000)) status=\(String(describing: session.status))")
       }
       DispatchQueue.main.async { result(["jobId": jobID]) }
     }
@@ -612,18 +621,33 @@ final class GroupEightNativeService {
 
   private func compressionThumbnail(_ arguments: Any?, _ result: @escaping FlutterResult) {
     guard let args = arguments as? [String: Any] else { result(FlutterError(code: "compression_preview", message: "Preview is unavailable.", details: nil)); return }
-    let generator: AVAssetImageGenerator
-    if let path = args["path"] as? String { generator = AVAssetImageGenerator(asset: AVURLAsset(url: URL(fileURLWithPath: path))) }
-    else if let id = args["assetId"] as? String, let asset = videoAsset(id) {
+    let previewStarted = ProcessInfo.processInfo.systemUptime
+    if let path = args["path"] as? String {
+      let url = URL(fileURLWithPath: path)
+      compressionWorkQueue.async {
+        let image = self.previewImage(AVURLAsset(url: url))
+        Self.compressionLogger.info("compression_profile preview_ms=\(Int((ProcessInfo.processInfo.systemUptime - previewStarted) * 1000)) source=export")
+        DispatchQueue.main.async {
+          if let image { result(FlutterStandardTypedData(bytes: image)) }
+          else { result(NSNull()) }
+        }
+      }
+      return
+    } else if let id = args["assetId"] as? String, let asset = videoAsset(id) {
       let options = PHVideoRequestOptions(); options.isNetworkAccessAllowed = false
       PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { asset, _, _ in
-        guard let asset, let image = self.previewImage(asset) else { DispatchQueue.main.async { result(NSNull()) }; return }
-        DispatchQueue.main.async { result(FlutterStandardTypedData(bytes: image)) }
+        guard let asset else { DispatchQueue.main.async { result(NSNull()) }; return }
+        self.compressionWorkQueue.async {
+          let image = self.previewImage(asset)
+          Self.compressionLogger.info("compression_profile preview_ms=\(Int((ProcessInfo.processInfo.systemUptime - previewStarted) * 1000)) source=photos")
+          DispatchQueue.main.async {
+            if let image { result(FlutterStandardTypedData(bytes: image)) }
+            else { result(NSNull()) }
+          }
+        }
       }
       return
     } else { result(NSNull()); return }
-    guard let image = previewImage(generator.asset) else { result(NSNull()); return }
-    DispatchQueue.main.async { result(FlutterStandardTypedData(bytes: image)) }
   }
 
   private func previewImage(_ asset: AVAsset) -> Data? {
