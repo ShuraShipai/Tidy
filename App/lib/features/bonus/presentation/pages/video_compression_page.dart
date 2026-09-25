@@ -265,13 +265,7 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
       backLabel: 'Video',
       footer: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          TidyActionButton(label: 'Compress', onPressed: _compress),
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
+        children: [TidyActionButton(label: 'Compress', onPressed: _compress)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
