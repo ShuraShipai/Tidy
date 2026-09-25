@@ -29,6 +29,7 @@ class ContactsService {
     required String organization,
     required List<String> phones,
     required List<String> emails,
+    required bool acknowledgeUnreadableNotes,
   }) async {
     await _channel.invokeMethod<void>('merge', {
       'keeper': keeper.id,
@@ -39,6 +40,7 @@ class ContactsService {
       'organization': organization,
       'phones': phones,
       'emails': emails,
+      'acknowledgeUnreadableNotes': acknowledgeUnreadableNotes,
     });
   }
 

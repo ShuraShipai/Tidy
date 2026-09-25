@@ -34,7 +34,7 @@ final class ContactsNativeService {
     CNContactUrlAddressesKey as CNKeyDescriptor, CNContactSocialProfilesKey as CNKeyDescriptor,
     CNContactInstantMessageAddressesKey as CNKeyDescriptor, CNContactRelationsKey as CNKeyDescriptor,
     CNContactDatesKey as CNKeyDescriptor, CNContactBirthdayKey as CNKeyDescriptor,
-    CNContactNoteKey as CNKeyDescriptor, CNContactImageDataKey as CNKeyDescriptor]
+    CNContactImageDataKey as CNKeyDescriptor]
 
   private func read(_ result: @escaping FlutterResult) {
     let access = status()
@@ -65,7 +65,7 @@ final class ContactsNativeService {
       "addresses": c.postalAddresses.map { "\($0.value)" }, "urls": c.urlAddresses.map { $0.value as String },
       "social": c.socialProfiles.map { "\($0.value)" }, "im": c.instantMessageAddresses.map { "\($0.value)" },
       "relations": c.contactRelations.map { "\($0.value)" }, "dates": c.dates.map { "\($0.value)" },
-      "birthday": c.birthday.map { "\($0)" } ?? "", "note": c.note,
+      "birthday": c.birthday.map { "\($0)" } ?? "",
       "image": c.imageData?.base64EncodedString() ?? ""]
     let bytes = (try? JSONSerialization.data(withJSONObject: details, options: [.sortedKeys])) ?? Data()
     return SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
@@ -79,16 +79,16 @@ final class ContactsNativeService {
     guard status() == "authorized" || status() == "limited" else { result(FlutterError(code: "access_changed", message: "Contacts access is no longer available.", details: nil)); return }
     guard let keeperID = args["keeper"] as? String, let otherID = args["other"] as? String,
       let versions = args["versions"] as? [String: String] else { result(FlutterError(code: "invalid_request", message: "The reviewed contacts are incomplete.", details: nil)); return }
+    guard args["acknowledgeUnreadableNotes"] as? Bool == true else {
+      result(FlutterError(code: "notes_acknowledgement_required", message: "Confirm the Notes limitation in the merge preview before continuing.", details: nil)); return
+    }
     do {
       let original = try fetch(keeperID), source = try fetch(otherID)
       guard fingerprint(original) == versions[keeperID], fingerprint(source) == versions[otherID] else {
         result(FlutterError(code: "changed", message: "A contact changed since review. Compare the current records again.", details: nil)); return
       }
-      // Preserve every unique supported multi-value field. Singular notes or birthdays
-      // that conflict cannot be represented without loss, so require renewed review.
-      if !original.note.isEmpty && !source.note.isEmpty && original.note != source.note {
-        result(FlutterError(code: "conflict", message: "These contacts have different notes. Keep them separate to avoid losing either note.", details: nil)); return
-      }
+      // Notes require Apple's restricted contacts.notes entitlement. They are
+      // disclosed and explicitly acknowledged in preview before this operation.
       if let a = original.birthday, let b = source.birthday, a != b {
         result(FlutterError(code: "conflict", message: "These contacts have different birthdays. Keep them separate to avoid losing either date.", details: nil)); return
       }
@@ -104,10 +104,9 @@ final class ContactsNativeService {
       mutable.instantMessageAddresses = self.unique(original.instantMessageAddresses + source.instantMessageAddresses) { "\($0.value)" }
       mutable.contactRelations = self.unique(original.contactRelations + source.contactRelations) { "\($0.value)" }
       mutable.dates = self.unique(original.dates + source.dates) { "\($0.value)" }
-      if mutable.note.isEmpty { mutable.note = source.note }
       if mutable.birthday == nil { mutable.birthday = source.birthday }
       if mutable.imageData == nil { mutable.imageData = source.imageData }
-      let request = CNSaveRequest(); request.update(mutable); request.delete(source)
+      let request = CNSaveRequest(); request.update(mutable); request.delete(source.mutableCopy() as! CNMutableContact)
       try store.execute(request)
       DispatchQueue.main.async { result(nil) }
     } catch { DispatchQueue.main.async { result(FlutterError(code: "merge_failed", message: error.localizedDescription, details: nil)) } }

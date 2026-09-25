@@ -19,6 +19,7 @@ class _MergedContactPreviewPageState
     extends ConsumerState<MergedContactPreviewPage> {
   String? keeperId;
   bool busy = false, done = false;
+  bool notesLossAcknowledged = false;
   String? error;
   ContactRecord? completedRecord;
   @override
@@ -112,9 +113,22 @@ class _MergedContactPreviewPageState
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
-                  'Unique phone numbers and email addresses from both records are included. Other supported unique details stay with the merged record. Conflicting notes or birthdays stop the merge so nothing is silently lost.',
+                  'Unique phone numbers, email addresses and other readable details are included. iOS does not allow Tidy to read Contact Notes without a restricted Apple entitlement. Notes on the source contact may be lost if you merge; keep the contacts separate to preserve them.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: notesLossAcknowledged,
+                onChanged: busy
+                    ? null
+                    : (value) => setState(
+                        () => notesLossAcknowledged = value ?? false,
+                      ),
+                title: const Text(
+                  'I understand source Notes may not be preserved',
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
               ),
               if (error != null)
                 Padding(
@@ -127,7 +141,9 @@ class _MergedContactPreviewPageState
               const SizedBox(height: 22),
               TidyActionButton(
                 label: busy ? 'Merging…' : 'Merge Contacts',
-                onPressed: busy ? null : () => _confirm(keeper, other, merged),
+                onPressed: busy || !notesLossAcknowledged
+                    ? null
+                    : () => _confirm(keeper, other, merged),
               ),
               const SizedBox(height: 8),
               TidyActionButton(
@@ -225,6 +241,7 @@ class _MergedContactPreviewPageState
             organization: merged.organization,
             phones: merged.phones,
             emails: merged.emails,
+            acknowledgeUnreadableNotes: notesLossAcknowledged,
           );
       if (mounted) {
         setState(() {

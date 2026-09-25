@@ -128,6 +128,7 @@ class ContactsRepository {
     required String organization,
     required List<String> phones,
     required List<String> emails,
+    required bool acknowledgeUnreadableNotes,
   }) => service.merge(
     keeper,
     other,
@@ -136,6 +137,7 @@ class ContactsRepository {
     organization: organization,
     phones: phones,
     emails: emails,
+    acknowledgeUnreadableNotes: acknowledgeUnreadableNotes,
   );
   Future<void> delete(List<ContactRecord> records) => service.delete(records);
 }

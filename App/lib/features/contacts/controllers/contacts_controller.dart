@@ -104,6 +104,7 @@ class ContactsController extends AsyncNotifier<ContactsState> {
     required String organization,
     required List<String> phones,
     required List<String> emails,
+    required bool acknowledgeUnreadableNotes,
   }) async {
     final s = state.value;
     if (s == null) return;
@@ -117,6 +118,7 @@ class ContactsController extends AsyncNotifier<ContactsState> {
         organization: organization,
         phones: phones,
         emails: emails,
+        acknowledgeUnreadableNotes: acknowledgeUnreadableNotes,
       );
       await refresh();
     } catch (e) {
