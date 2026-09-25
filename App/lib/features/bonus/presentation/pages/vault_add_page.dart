@@ -24,7 +24,11 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scan = ref.watch(scanControllerProvider);
+    final scan = ref
+        .watch(
+          scanControllerProvider.select((state) => _VaultScanViewState(state)),
+        )
+        .state;
     final permission = scan.permissions['photos'];
     final photos =
         scan.hasResults && const ['authorized', 'limited'].contains(permission)
@@ -35,21 +39,29 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
       title: 'Choose private items',
       subtitle: 'Adding encrypted copies leaves the originals in Photos.',
       backLabel: 'Vault',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (permission == 'limited')
-            const Text(
-              'Limited Photos access · only selected library items are available.',
+      slivers: [
+        if (permission == 'limited')
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: TidySpacing.lg),
+              child: Text(
+                'Limited Photos access · only selected library items are available.',
+              ),
             ),
-          if (_error != null)
-            Text(
-              _error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        if (_error != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: TidySpacing.lg),
+              child: Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: TidySpacing.lg),
+          sliver: SliverGrid.builder(
             itemCount: photos.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -62,37 +74,43 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
               return Semantics(
                 label:
                     'Photo ${index + 1}, ${selected ? 'selected for Vault copy' : 'not selected'}',
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    PhotoAssetThumbnail(
-                      photo: photo,
-                      selected: selected,
-                      semanticContext: 'Photo for private Vault',
-                      onPreview: () => context.push(
-                        '/photos/viewer?id=${Uri.encodeQueryComponent(photo.id)}&collection=similar',
-                      ),
-                      onToggleSelection: () => setState(() {
-                        if (!_selected.add(photo.id))
-                          _selected.remove(photo.id);
-                      }),
-                    ),
-                  ],
+                child: PhotoAssetThumbnail(
+                  photo: photo,
+                  selected: selected,
+                  semanticContext: 'Photo for private Vault',
+                  onPreview: () => context.push(
+                    '/photos/viewer?id=${Uri.encodeQueryComponent(photo.id)}&collection=similar',
+                  ),
+                  onToggleSelection: () => setState(() {
+                    if (!_selected.add(photo.id)) _selected.remove(photo.id);
+                  }),
                 ),
               );
             },
           ),
-          const SizedBox(height: TidySpacing.md),
-          const Text(
-            'Vault and cleanup selections stay separate. Items unavailable locally cannot be copied.',
+        ),
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              TidySpacing.lg,
+              TidySpacing.md,
+              TidySpacing.lg,
+              TidySpacing.xs,
+            ),
+            child: Text(
+              'Vault and cleanup selections stay separate. Items unavailable locally cannot be copied.',
+            ),
           ),
-          if (_busy)
-            const Padding(
+        ),
+        if (_busy)
+          const SliverToBoxAdapter(
+            child: Padding(
               padding: EdgeInsets.all(TidySpacing.md),
               child: LinearProgressIndicator(),
             ),
-        ],
-      ),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: TidySpacing.lg)),
+      ],
       footer: TidyActionButton(
         label: _selected.isEmpty
             ? 'Select Items'
@@ -159,4 +177,45 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
       if (mounted) setState(() => _busy = false);
     }
   }
+}
+
+class _VaultScanViewState {
+  const _VaultScanViewState(this.state);
+
+  final ScanState state;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! _VaultScanViewState) return false;
+    final a = state;
+    final b = other.state;
+    if (identical(a, b)) return true;
+    if (a.phase != b.phase ||
+        a.running != b.running ||
+        a.hasResults != b.hasResults ||
+        a.permissions['photos'] != b.permissions['photos']) {
+      return false;
+    }
+    final aPhotos = a.media.where((record) => !record.video);
+    final bPhotos = b.media.where((record) => !record.video);
+    if (aPhotos.length != bPhotos.length) return false;
+    final aIterator = aPhotos.iterator;
+    final bIterator = bPhotos.iterator;
+    while (aIterator.moveNext() && bIterator.moveNext()) {
+      if (aIterator.current.id != bIterator.current.id) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    state.phase,
+    state.running,
+    state.hasResults,
+    state.permissions['photos'],
+    Object.hashAll(
+      state.media.where((record) => !record.video).map((item) => item.id),
+    ),
+  );
 }

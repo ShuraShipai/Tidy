@@ -24,6 +24,8 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
   final Map<String, Future<Uint8List?>> _thumbnails = {};
   bool _unlocked = false;
   bool _busy = false;
+  bool _setupChecked = false;
+  bool _vaultConfigured = false;
   String? _error;
   late final AppLifecycleListener _lifecycleListener;
 
@@ -37,6 +39,24 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
       onHide: _lockUi,
       onPause: _lockUi,
     );
+    unawaited(_loadVaultStatus());
+  }
+
+  Future<void> _loadVaultStatus() async {
+    try {
+      final configured = await _service.vaultIsConfigured();
+      if (!mounted) return;
+      setState(() {
+        _vaultConfigured = configured;
+        _setupChecked = true;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = '$error';
+        _setupChecked = true;
+      });
+    }
   }
 
   @override
@@ -67,6 +87,8 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
       final rows = await _service.vaultItems();
       if (!mounted) return;
       setState(() {
+        _vaultConfigured = true;
+        _setupChecked = true;
         _unlocked = true;
         _items = rows.map(VaultItemRecord.fromMap).toList(growable: false);
         _thumbnails.clear();
@@ -173,8 +195,12 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         TidyActionButton(
-          label: 'Set Up Vault',
-          onPressed: _busy ? null : _unlock,
+          label: !_setupChecked
+              ? 'Checking Vault…'
+              : _vaultConfigured
+              ? 'Unlock Vault'
+              : 'Set Up Vault',
+          onPressed: _busy || !_setupChecked ? null : _unlock,
         ),
         TextButton(
           onPressed: () => context.pop(),
@@ -189,16 +215,20 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
     subtitle:
         '${_items.length} private ${_items.length == 1 ? 'copy' : 'copies'} · unlocked for this session',
     backLabel: 'Settings',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_error != null)
-          Text(
-            _error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+    slivers: [
+      if (_error != null)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: TidySpacing.lg),
+            child: Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
-        if (_items.isEmpty)
-          const Padding(
+        ),
+      if (_items.isEmpty)
+        const SliverToBoxAdapter(
+          child: Padding(
             padding: EdgeInsets.symmetric(vertical: TidySpacing.xl),
             child: Column(
               children: [
@@ -212,11 +242,12 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
                 ),
               ],
             ),
-          )
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+          ),
+        )
+      else
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: TidySpacing.lg),
+          sliver: SliverGrid.builder(
             itemCount: _items.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -270,14 +301,23 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
               );
             },
           ),
-        const SizedBox(height: TidySpacing.md),
-        Text(
-          _selected.isEmpty
-              ? 'Select private copies to review removal. Photos originals remain in your library.'
-              : '${_selected.length} selected · ${_size(_items.where((item) => _selected.contains(item.id)).fold<int>(0, (sum, item) => sum + item.bytes))} in the Vault',
         ),
-      ],
-    ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            TidySpacing.lg,
+            TidySpacing.md,
+            TidySpacing.lg,
+            TidySpacing.lg,
+          ),
+          child: Text(
+            _selected.isEmpty
+                ? 'Select private copies to review removal. Photos originals remain in your library.'
+                : '${_selected.length} selected · ${_size(_items.where((item) => _selected.contains(item.id)).fold<int>(0, (sum, item) => sum + item.bytes))} in the Vault',
+          ),
+        ),
+      ),
+    ],
     footer: Column(
       mainAxisSize: MainAxisSize.min,
       children: [

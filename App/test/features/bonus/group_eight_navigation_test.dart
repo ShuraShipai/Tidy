@@ -30,9 +30,31 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pumpAndSettle();
 
-    expect(find.text('Set Up Vault'), findsOneWidget);
+    expect(find.text('Unlock Vault'), findsOneWidget);
     expect(find.text('Add Items'), findsNothing);
     expect(service.vaultLockCount, 1);
+  });
+
+  testWidgets('an initialized Vault offers Unlock instead of Set Up', (
+    tester,
+  ) async {
+    final service = _RecordingGroupEightService()..vaultConfigured = true;
+    final container = ProviderContainer(
+      overrides: [groupEightServiceProvider.overrideWithValue(service)],
+    );
+    addTearDown(container.dispose);
+    container.read(appRouterProvider).go('/bonus/vault');
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const TidyApp()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unlock Vault'), findsOneWidget);
+    expect(find.text('Set Up Vault'), findsNothing);
+    await tester.tap(find.text('Unlock Vault'));
+    await tester.pumpAndSettle();
+    expect(find.text('Add Items'), findsOneWidget);
   });
 
   testWidgets(
@@ -77,6 +99,7 @@ class _RecordingGroupEightService extends GroupEightService {
   int calendarRequestCount = 0;
   int vaultAuthenticationCount = 0;
   int vaultLockCount = 0;
+  bool vaultConfigured = false;
 
   @override
   Future<String> calendarStatus() async {
@@ -95,6 +118,9 @@ class _RecordingGroupEightService extends GroupEightService {
     vaultAuthenticationCount++;
     return {'unlocked': true};
   }
+
+  @override
+  Future<bool> vaultIsConfigured() async => vaultConfigured;
 
   @override
   Future<List<Map<String, Object?>>> vaultItems() async => const [];
