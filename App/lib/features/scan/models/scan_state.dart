@@ -16,6 +16,9 @@ class MediaRecord {
       video = map['video']! as bool,
       screenshot = map['screenshot']! as bool,
       bytes = map['bytes'] as int?,
+      contentHash = map['contentHash'] as String?,
+      blurScore = (map['blurScore'] as num?)?.toDouble(),
+      possiblyBlurry = map['possiblyBlurry'] as bool?,
       width = map['width']! as int,
       height = map['height']! as int,
       duration = (map['duration']! as num).toDouble(),
@@ -25,6 +28,9 @@ class MediaRecord {
   final String id;
   final bool video, screenshot, favorite;
   final int? bytes;
+  final String? contentHash;
+  final double? blurScore;
+  final bool? possiblyBlurry;
   final int width, height;
   final double duration;
   final DateTime? createdAt, modifiedAt;
@@ -70,7 +76,46 @@ class ScanState {
   final DateTime? completedAt;
   final String? stage, message, storageError;
   bool get running => phase == ScanPhase.loading || phase == ScanPhase.scanning;
-  bool get hasResults => phase == ScanPhase.success || phase == ScanPhase.empty;
+  // An interrupted rescan can still expose the previous completed findings.
+  bool get hasResults =>
+      phase == ScanPhase.success ||
+      phase == ScanPhase.empty ||
+      (completedAt != null &&
+          phase != ScanPhase.stale &&
+          phase != ScanPhase.permissionDenied);
+
+  ScanState withStatus(
+    ScanPhase nextPhase, {
+    ScanState? previous,
+    String? message,
+  }) {
+    final result = previous ?? this;
+    final access = permissions.isNotEmpty ? permissions : result.permissions;
+    final photosReadable = ['authorized', 'limited'].contains(access['photos']);
+    final contactsReadable = [
+      'authorized',
+      'limited',
+    ].contains(access['contacts']);
+    return ScanState(
+      phase: nextPhase,
+      media: photosReadable ? result.media : const [],
+      similar: photosReadable ? result.similar : const [],
+      contacts: contactsReadable ? result.contacts : const [],
+      permissions: access,
+      capacity: capacity ?? result.capacity,
+      free: free ?? result.free,
+      used: used ?? result.used,
+      completedAt: result.completedAt,
+      processed: processed,
+      total: total,
+      stage: stage,
+      message: message ?? this.message,
+      storageError: storageError ?? result.storageError,
+      contactCount: contactsReadable ? result.contactCount : 0,
+      unavailableImages: photosReadable ? result.unavailableImages : 0,
+    );
+  }
+
   bool get hasPermissionGaps =>
       !['authorized', 'limited'].contains(permissions['photos']) ||
       !['authorized', 'limited'].contains(permissions['contacts']);

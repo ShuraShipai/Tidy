@@ -6,8 +6,24 @@ import '../services/library_scan_service.dart';
 class ScanRepository {
   ScanRepository(this.service);
   final LibraryScanService service;
-  Future<void> start() => service.start();
+  ScanState? _lastCompleted;
+
+  ScanState? get lastCompleted => _lastCompleted;
+
+  Future<void> start() async {
+    _latest = null;
+    _serial = null;
+    await service.start();
+  }
+
   Future<void> cancel() => service.cancel();
+  Future<ScanState> applyDeleted(Set<String> ids) async {
+    if (ids.isEmpty) return _latest ?? const ScanState();
+    await service.applyDeleted(ids);
+    _serial = null;
+    return read();
+  }
+
   int? _serial;
   ScanState? _latest;
   Future<ScanState> read() async {
@@ -15,6 +31,26 @@ class ScanRepository {
     if (map['unchanged'] == true && _latest != null) return _latest!;
     final decoded = await compute(decode, map);
     _serial = map['serial'] as int?;
+    if (decoded.phase == ScanPhase.stale) {
+      _lastCompleted = null;
+      return _latest = decoded;
+    }
+    if (decoded.phase == ScanPhase.success ||
+        decoded.phase == ScanPhase.empty) {
+      _lastCompleted = decoded;
+      return _latest = decoded;
+    }
+    // A process killed during a rescan restores its previous successful
+    // snapshot with an interrupted phase. Keep that snapshot authoritative.
+    if (_lastCompleted == null && decoded.completedAt != null) {
+      _lastCompleted = decode({...map, 'phase': 'success'});
+    }
+    if (_lastCompleted != null) {
+      return _latest = decoded.withStatus(
+        decoded.phase,
+        previous: _lastCompleted,
+      );
+    }
     return _latest = decoded;
   }
 

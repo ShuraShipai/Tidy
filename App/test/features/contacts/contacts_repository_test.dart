@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tidy/features/contacts/models/contact_record.dart';
 import 'package:tidy/features/contacts/repositories/contacts_repository.dart';
 import 'package:tidy/features/contacts/services/contacts_service.dart';
+import 'package:tidy/features/scan/models/scan_state.dart';
 
 ContactRecord contact(
   String id,
@@ -54,5 +55,18 @@ void main() {
       repository.detect([contact('a', 'Alex'), contact('b', 'Alex')]),
       isEmpty,
     );
+  });
+  test('review pairs stay within shared scan groups and direct evidence', () {
+    final records = [
+      contact('a', 'Same Name', phones: ['1234567890']),
+      contact('b', 'Same Name', phones: ['1234567890'], emails: ['a@b.com']),
+      contact('c', 'Another', emails: ['a@b.com']),
+      contact('d', 'Same Name', phones: ['1234567890']),
+    ];
+    final pairs = repository.reviewPairs(records, [
+      MatchGroup(['a', 'b', 'c'], 'Shared details'),
+    ]);
+    expect(pairs.map((pair) => pair.key), ['a|b', 'b|c']);
+    expect(pairs.any((pair) => pair.key.contains('d')), isFalse);
   });
 }

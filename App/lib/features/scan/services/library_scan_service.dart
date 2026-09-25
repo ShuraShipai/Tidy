@@ -16,6 +16,8 @@ class LibraryScanService {
   }
 
   Future<void> cancel() => channel.invokeMethod<void>('cancel');
+  Future<void> applyDeleted(Set<String> ids) =>
+      channel.invokeMethod<void>('applyDeleted', ids.toList());
   Future<Map<Object?, Object?>> status([int? serial]) async =>
       (await channel.invokeMapMethod<Object?, Object?>('status', serial))!;
 }

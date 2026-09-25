@@ -65,12 +65,18 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
     if (s.status != 'authorized' && s.status != 'limited') {
       return _StatePage(
         title: switch (s.status) {
+          'notScanned' => 'Scan your library first',
+          'scanning' => 'Scanning your library',
           'denied' => 'Contacts Access Needed',
           'restricted' => 'Contacts Are Restricted',
           'unsupported' => 'Contacts unavailable',
           _ => 'Contacts access needed',
         },
         message: switch (s.status) {
+          'notScanned' =>
+            'Start a scan from Home to review possible duplicate contacts.',
+          'scanning' =>
+            'Your contacts will be ready after the current scan finishes.',
           'denied' =>
             'Allow Contacts access in Settings to find possible duplicate contacts.',
           'restricted' =>
@@ -80,10 +86,16 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
           _ =>
             'Allow access to find entries that may belong to the same person.',
         },
-        action: s.status == 'denied' ? 'Open Settings' : 'Try Again',
+        action: s.status == 'denied'
+            ? 'Open Settings'
+            : s.status == 'notScanned' || s.status == 'scanning'
+            ? 'Go to Home'
+            : 'Try Again',
         onAction: () async {
           if (s.status == 'denied') {
             await OnboardingService().openSettings();
+          } else if (s.status == 'notScanned' || s.status == 'scanning') {
+            if (context.mounted) context.go('/home');
           } else {
             await ctl.refresh();
           }

@@ -1,3 +1,4 @@
+import '../../scan/models/scan_state.dart';
 import '../models/contact_record.dart';
 import '../services/contacts_service.dart';
 
@@ -10,6 +11,51 @@ class ContactsRepository {
       result['status']! as String,
       result['contacts']! as List<ContactRecord>,
     );
+  }
+
+  // The completed main scan owns discovery. Fetching contact details for
+  // review only resolves pairs inside those already discovered groups.
+  List<ContactMatchGroup> reviewPairs(
+    List<ContactRecord> contacts,
+    Iterable<MatchGroup> scanGroups,
+  ) {
+    final byId = {for (final contact in contacts) contact.id: contact};
+    final pairs = <ContactMatchGroup>[];
+    for (final group in scanGroups) {
+      final members = [for (final id in group.ids) ?byId[id]]
+        ..sort((a, b) => a.id.compareTo(b.id));
+      for (var i = 0; i < members.length; i++) {
+        for (var j = i + 1; j < members.length; j++) {
+          final left = members[i], right = members[j];
+          final leftPhones = left.phones
+              .map((value) => value.replaceAll(RegExp(r'\D'), ''))
+              .where((value) => value.length >= 7)
+              .toSet();
+          final rightPhones = right.phones
+              .map((value) => value.replaceAll(RegExp(r'\D'), ''))
+              .where((value) => value.length >= 7)
+              .toSet();
+          final leftEmails = left.emails
+              .map((value) => value.trim().toLowerCase())
+              .where((value) => value.contains('@'))
+              .toSet();
+          final rightEmails = right.emails
+              .map((value) => value.trim().toLowerCase())
+              .where((value) => value.contains('@'))
+              .toSet();
+          final evidence = <String>[
+            if (leftPhones.intersection(rightPhones).isNotEmpty)
+              'Same phone number',
+            if (leftEmails.intersection(rightEmails).isNotEmpty)
+              'Same email address',
+          ];
+          if (evidence.isNotEmpty) {
+            pairs.add(ContactMatchGroup(left.id, right.id, evidence));
+          }
+        }
+      }
+    }
+    return List.unmodifiable(pairs);
   }
 
   List<ContactMatchGroup> detect(List<ContactRecord> contacts) {

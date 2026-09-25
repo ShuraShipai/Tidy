@@ -9,7 +9,7 @@ import '../design/tidy_shadows.dart';
 import 'tidy_glyph.dart';
 import 'tidy_clay_surface.dart';
 
-enum TidyOrbTone { violet, pink, sky, green }
+enum TidyOrbTone { violet, pink, sky, green, amber }
 
 class TidyOrb extends StatelessWidget {
   const TidyOrb({
@@ -45,6 +45,11 @@ class TidyOrb extends StatelessWidget {
         TidyColors.orbGreenLight,
         TidyColors.orbGreenMid,
         TidyColors.emerald,
+      ),
+      TidyOrbTone.amber => (
+        TidyColors.orbAmberLight,
+        TidyColors.orbAmberMid,
+        TidyColors.orbAmberDeep,
       ),
     };
 

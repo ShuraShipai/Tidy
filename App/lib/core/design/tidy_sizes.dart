@@ -16,6 +16,9 @@ abstract final class TidySizes {
   static const double actionText = 15;
   static const double backIcon = 20;
   static const double smallIcon = 19;
+  static const double sheetHandleWidth = 38;
+  static const double sheetHandleHeight = 5;
+  static const double sheetTitleText = 24;
   static const double checklistIcon = 21;
   static const double companionOrb = 64;
   static const double sparkIcon = 30;

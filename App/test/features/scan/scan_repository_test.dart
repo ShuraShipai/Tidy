@@ -1,6 +1,38 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tidy/features/scan/models/scan_state.dart';
 import 'package:tidy/features/scan/repositories/scan_repository.dart';
+import 'package:tidy/features/scan/services/library_scan_service.dart';
+
+class _StatusService extends LibraryScanService {
+  Map<Object?, Object?> response = result();
+  int serial = 0;
+  bool fail = false;
+  int starts = 0;
+
+  @override
+  Future<Map<Object?, Object?>> status([int? previousSerial]) async {
+    if (fail) throw StateError('temporary status failure');
+    return {...response, 'serial': ++serial};
+  }
+
+  @override
+  Future<void> start() async {
+    starts++;
+  }
+
+  @override
+  Future<void> applyDeleted(Set<String> ids) async {
+    response = {
+      ...response,
+      'media': (response['media'] as List? ?? [])
+          .where((item) => !ids.contains((item as Map)['id']))
+          .toList(),
+      'similarPairs': (response['similarPairs'] as List? ?? [])
+          .where((pair) => !(pair as List).any(ids.contains))
+          .toList(),
+    };
+  }
+}
 
 // Synthetic records are test fixtures only; no fixture is bundled in the app.
 Map<String, Object?> media(
@@ -27,6 +59,143 @@ Map<String, Object?> result() => {
   'contactMatches': <Object?>[],
 };
 void main() {
+  test('completed findings survive idle and transient status reads', () async {
+    final service = _StatusService();
+    final repository = ScanRepository(service);
+
+    final completed = await repository.read();
+    service.response = {'phase': 'idle'};
+    final retained = await repository.read();
+    expect(retained.phase, ScanPhase.idle);
+    expect(retained.completedAt, completed.completedAt);
+    expect(retained.hasResults, isTrue);
+
+    service.fail = true;
+    await expectLater(repository.read(), throwsStateError);
+    expect(identical(repository.lastCompleted, completed), isTrue);
+  });
+
+  test('an interrupted rescan keeps the last successful findings', () async {
+    final service = _StatusService();
+    service.response = {
+      ...result(),
+      'media': [media('kept', bytes: 42, screenshot: true)],
+    };
+    final repository = ScanRepository(service);
+    final completed = await repository.read();
+    await repository.start();
+    service.response = {'phase': 'scanning', 'processed': 2, 'total': 5};
+    final running = await repository.read();
+    expect(running.phase, ScanPhase.scanning);
+    expect(running.media.single.id, 'kept');
+    expect(running.completedAt, completed.completedAt);
+    service.response = {'phase': 'cancelled'};
+    final interrupted = await repository.read();
+    expect(interrupted.phase, ScanPhase.cancelled);
+    expect(interrupted.hasResults, isTrue);
+    expect(repository.lastCompleted?.media.single.id, 'kept');
+  });
+
+  test(
+    'confirmed media deletion updates shared findings without rescan',
+    () async {
+      final service = _StatusService();
+      service.response = {
+        ...result(),
+        'media': [
+          media('a', bytes: 10),
+          media('b', bytes: 20),
+          media('c', bytes: 30, video: true),
+        ],
+        'similarPairs': [
+          ['a', 'b'],
+        ],
+        'contactMatches': [
+          {
+            'ids': ['one', 'two'],
+            'evidence': 'Shared phone number',
+          },
+        ],
+      };
+      final repository = ScanRepository(service);
+      await repository.read();
+
+      final updated = await repository.applyDeleted({'a'});
+      expect(updated.media.map((item) => item.id), ['b', 'c']);
+      expect(updated.similar, isEmpty);
+      expect(updated.contacts.single.ids, {'one', 'two'});
+      expect(updated.completedAt, isNotNull);
+      expect(service.starts, 0);
+    },
+  );
+
+  test('Photos permission change does not discard Contacts findings', () async {
+    final service = _StatusService();
+    service.response = {
+      ...result(),
+      'media': [media('photo', bytes: 10)],
+      'contactMatches': [
+        {
+          'ids': ['one', 'two'],
+          'evidence': 'Shared email address',
+        },
+      ],
+    };
+    final repository = ScanRepository(service);
+    await repository.read();
+    service.response = {
+      ...service.response,
+      'permissions': {'photos': 'denied', 'contacts': 'authorized'},
+      'media': <Object?>[],
+      'similarPairs': <Object?>[],
+    };
+    final updated = await repository.read();
+    expect(updated.media, isEmpty);
+    expect(updated.contacts.single.ids, {'one', 'two'});
+    expect(updated.hasResults, isTrue);
+  });
+
+  test('revoked access is hidden even during an interrupted rescan', () async {
+    final service = _StatusService();
+    service.response = {
+      ...result(),
+      'media': [media('photo', bytes: 10)],
+      'contactMatches': [
+        {
+          'ids': ['one', 'two'],
+          'evidence': 'Shared email address',
+        },
+      ],
+    };
+    final repository = ScanRepository(service);
+    await repository.read();
+    service.response = {
+      'phase': 'cancelled',
+      'permissions': {'photos': 'denied', 'contacts': 'authorized'},
+    };
+    final retained = await repository.read();
+    expect(retained.media, isEmpty);
+    expect(retained.similar, isEmpty);
+    expect(retained.contacts.single.ids, {'one', 'two'});
+  });
+
+  test('only native stale state clears completed findings', () async {
+    final service = _StatusService();
+    final repository = ScanRepository(service);
+    await repository.read();
+    expect(repository.lastCompleted, isNotNull);
+
+    service.response = {'phase': 'stale'};
+    await repository.read();
+    expect(repository.lastCompleted, isNull);
+
+    service.response = result();
+    await repository.read();
+    expect(repository.lastCompleted, isNotNull);
+    await repository.start();
+    expect(repository.lastCompleted, isNotNull);
+  });
+
   test('only a completed check with no findings becomes empty', () {
     expect(ScanRepository.decode(result()).phase, ScanPhase.empty);
     for (final phase in [

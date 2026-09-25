@@ -12,6 +12,8 @@ abstract final class TidyColors {
   static const Color emerald = Color(0xFF10B981);
   static const Color amber = Color(0xFFF59E0B);
   static const Color destructive = Color(0xFFC52B3A);
+  static const Color sheetScrim = Color(0x52342B45);
+  static const Color sheetHandle = Color(0xFFC9BFD4);
   static const Color divider = Color(0xFFE2D9EC);
   static const Color violetTint = Color(0xFFEDE5F7);
   static const Color buttonSecondary = Color(0xFFEEE7F9);
@@ -26,6 +28,9 @@ abstract final class TidyColors {
   static const Color orbSkyDeep = Color(0xFF0C89B9);
   static const Color orbGreenLight = Color(0xFFE8FBF4);
   static const Color orbGreenMid = Color(0xFF80D5B5);
+  static const Color orbAmberLight = Color(0xFFFFF6E6);
+  static const Color orbAmberMid = Color(0xFFF6CC7B);
+  static const Color orbAmberDeep = Color(0xFFD4911B);
   static const Color orbShadow = Color(0x38AA90C9);
   static const Color clayHighlight = Color(0xB0FFFFFF);
   static const Color clayReflection = Color(0x30634099);

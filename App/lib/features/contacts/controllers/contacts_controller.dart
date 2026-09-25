@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../scan/controllers/scan_controller.dart';
 import '../models/contact_record.dart';
 import '../repositories/contacts_repository.dart';
 import '../services/contacts_service.dart';
@@ -54,13 +55,35 @@ class ContactsState {
 class ContactsController extends AsyncNotifier<ContactsState> {
   ContactsRepository get _repo => ref.read(contactsRepositoryProvider);
   @override
-  Future<ContactsState> build() async => _load();
+  Future<ContactsState> build() async {
+    ref.listen(scanControllerProvider, (previous, next) {
+      if (previous?.completedAt != next.completedAt ||
+          (previous?.hasResults ?? false) != next.hasResults) {
+        refresh();
+      }
+    });
+    return _load();
+  }
+
   Future<ContactsState> _load() async {
+    final scan = ref.read(scanControllerProvider);
+    if (!scan.hasResults) {
+      return ContactsState(status: scan.running ? 'scanning' : 'notScanned');
+    }
+    final access = scan.permissions['contacts'];
+    if (access != 'authorized' && access != 'limited') {
+      return ContactsState(status: access ?? 'notScanned');
+    }
     final (status, records) = await _repo.read();
+    final current = ref.read(scanControllerProvider);
+    if (!current.hasResults || current.completedAt != scan.completedAt) {
+      return const ContactsState(status: 'notScanned');
+    }
+    final reviewGroups = _repo.reviewPairs(records, current.contacts);
     return ContactsState(
       status: status,
       contacts: records,
-      groups: _repo.detect(records),
+      groups: reviewGroups,
     );
   }
 

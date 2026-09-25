@@ -8,7 +8,7 @@ import '../design/tidy_shadows.dart';
 import '../design/tidy_motion.dart';
 import 'tidy_clay_surface.dart';
 
-enum TidyActionStyle { primary, secondary, quiet }
+enum TidyActionStyle { primary, secondary, quiet, destructive }
 
 class TidyActionButton extends StatefulWidget {
   const TidyActionButton({
@@ -35,6 +35,7 @@ class _TidyActionButtonState extends State<TidyActionButton> {
     final BorderRadius borderRadius = BorderRadius.circular(TidyRadii.button);
     final Color foreground = switch (widget.style) {
       TidyActionStyle.primary => Colors.white,
+      TidyActionStyle.destructive => Colors.white,
       TidyActionStyle.secondary => TidyColors.violetDeep,
       TidyActionStyle.quiet => TidyColors.secondaryText,
     };
@@ -79,7 +80,9 @@ class _TidyActionButtonState extends State<TidyActionButton> {
             ? control
             : TidyClaySurface(
                 radius: TidyRadii.button,
-                color: TidyColors.buttonSecondary,
+                color: widget.style == TidyActionStyle.destructive
+                    ? TidyColors.destructive
+                    : TidyColors.buttonSecondary,
                 gradient: widget.style == TidyActionStyle.primary
                     ? const LinearGradient(
                         begin: Alignment.topLeft,
@@ -90,7 +93,9 @@ class _TidyActionButtonState extends State<TidyActionButton> {
                         ],
                       )
                     : null,
-                shadows: TidyShadows.action,
+                shadows: widget.style == TidyActionStyle.destructive
+                    ? TidyShadows.destructiveAction
+                    : TidyShadows.action,
                 child: control,
               ),
       ),

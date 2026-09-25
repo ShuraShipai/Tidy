@@ -9,6 +9,7 @@ enum TidyGlyphName {
   lock,
   spark,
   check,
+  trash,
   back,
 }
 
@@ -129,6 +130,21 @@ class _GlyphPainter extends CustomPainter {
         path.moveTo(5, 12);
         path.lineTo(9, 16);
         path.lineTo(19, 6);
+      case TidyGlyphName.trash:
+        path.moveTo(4, 6);
+        path.lineTo(20, 6);
+        path.moveTo(9, 6);
+        path.lineTo(10, 3);
+        path.lineTo(14, 3);
+        path.lineTo(15, 6);
+        path.moveTo(6, 8);
+        path.lineTo(7, 21);
+        path.lineTo(17, 21);
+        path.lineTo(18, 8);
+        path.moveTo(10, 11);
+        path.lineTo(10.5, 18);
+        path.moveTo(14, 11);
+        path.lineTo(13.5, 18);
       case TidyGlyphName.back:
         path.moveTo(14, 5);
         path.lineTo(7, 12);

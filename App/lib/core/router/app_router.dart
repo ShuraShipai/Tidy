@@ -10,7 +10,16 @@ import '../../features/onboarding/presentation/pages/privacy_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
 import '../../features/scan/presentation/pages/scan_page.dart';
+import '../../features/videos/presentation/pages/videos_page.dart';
+import '../../features/videos/presentation/pages/video_viewer_page.dart';
 import '../../features/contacts/presentation/pages/contacts_page.dart';
+import '../../features/photos/models/photo_group.dart';
+import '../../features/photos/presentation/pages/photo_collection_page.dart';
+import '../../features/photos/presentation/pages/photo_comparison_page.dart';
+import '../../features/photos/presentation/pages/photo_selection_review_page.dart';
+import '../../features/photos/presentation/pages/photo_swipe_page.dart';
+import '../../features/photos/presentation/pages/photo_viewer_page.dart';
+import '../../features/photos/presentation/pages/photos_overview_page.dart';
 import '../widgets/section_placeholder_page.dart';
 import '../widgets/tidy_navigation_shell.dart';
 
@@ -58,6 +67,81 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
+      GoRoute(
+        path: '/videos/viewer',
+        name: 'video-viewer',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: VideoViewerPage(
+            assetId: state.uri.queryParameters['id'] ?? '',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/similar',
+        name: 'photo-similar',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PhotoCollectionPage(kind: PhotoCollectionKind.similar),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/screenshots',
+        name: 'photo-screenshots',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PhotoCollectionPage(
+            kind: PhotoCollectionKind.screenshots,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/blurry',
+        name: 'photo-blurry',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PhotoCollectionPage(kind: PhotoCollectionKind.blurry),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/similar/group',
+        name: 'photo-comparison',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: PhotoComparisonPage(
+            anchorId: state.uri.queryParameters['photo'] ?? '',
+            exactDuplicateOnly:
+                state.uri.queryParameters['kind'] == 'exactDuplicate',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/viewer',
+        name: 'photo-viewer',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: PhotoViewerPage(
+            assetId: state.uri.queryParameters['id'] ?? '',
+            collection: state.uri.queryParameters['collection'] ?? 'similar',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/review',
+        name: 'photo-review',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PhotoSelectionReviewPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/photos/swipe',
+        name: 'photo-swipe',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PhotoSwipePage(),
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             TidyNavigationShell(navigationShell: navigationShell),
@@ -76,8 +160,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/photos',
                 name: 'photos',
-                builder: (context, state) =>
-                    const SectionPlaceholderPage(title: 'Photos'),
+                builder: (context, state) => const PhotosOverviewPage(),
               ),
             ],
           ),
@@ -86,8 +169,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/videos',
                 name: 'videos',
-                builder: (context, state) =>
-                    const SectionPlaceholderPage(title: 'Videos'),
+                builder: (context, state) => const VideosPage(),
               ),
             ],
           ),

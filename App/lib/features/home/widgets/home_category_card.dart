@@ -13,11 +13,13 @@ class HomeCategoryCard extends StatelessWidget {
   const HomeCategoryCard({
     required this.category,
     required this.finding,
+    required this.onTap,
     super.key,
   });
 
   final CleanupCategory category;
   final CategoryFinding? finding;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -70,52 +72,56 @@ class HomeCategoryCard extends StatelessWidget {
       radius: TidyRadii.nested,
       color: tint,
       shadows: TidyShadows.raised,
-      child: Padding(
-        padding: const EdgeInsets.all(TidySpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                TidyOrb(glyph: glyph, tone: tone, size: 35),
-                const Spacer(),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: TidyColors.lightViolet,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(TidyRadii.nested),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(TidySpacing.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  TidyOrb(glyph: glyph, tone: tone, size: 35),
+                  const Spacer(),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: TidyColors.lightViolet,
+                  ),
+                ],
+              ),
+              const SizedBox(height: TidySpacing.sm),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: TidyColors.primaryText),
+              ),
+              const SizedBox(height: TidySpacing.xs),
+              Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontSize: 19),
+              ),
+              if (count != null) ...[
+                if (category != CleanupCategory.duplicateContacts)
+                  Text(
+                    '$count $unit',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                Text(
+                  footnote,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
-            ),
-            const SizedBox(height: TidySpacing.sm),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(color: TidyColors.primaryText),
-            ),
-            const SizedBox(height: TidySpacing.xs),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontSize: 19),
-            ),
-            if (count != null) ...[
-              if (category != CleanupCategory.duplicateContacts)
-                Text(
-                  '$count $unit',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              Text(
-                footnote,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );

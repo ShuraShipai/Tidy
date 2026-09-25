@@ -6,14 +6,12 @@ import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../scan/controllers/scan_controller.dart';
 import '../../../scan/controllers/scan_snapshot_provider.dart';
 import '../../../scan/models/scan_snapshot.dart';
-import '../../../scan/models/scan_state.dart' as scan_data;
 import '../../widgets/home_header.dart';
 import '../../widgets/home_storage_card.dart';
 import '../../widgets/home_scan_banner.dart';
 import '../../widgets/home_category_card.dart';
 import '../../widgets/home_empty_state.dart';
 import '../../widgets/home_access_card.dart';
-import '../../widgets/scan_status_note.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -47,8 +45,6 @@ class HomePage extends ConsumerWidget {
               if (showEmpty)
                 HomeEmptyState(snapshot: snapshot, onScan: scan)
               else ...[
-                if (state.phase != scan_data.ScanPhase.idle)
-                  ScanStatusNote(state: state),
                 if (noAccess) ...[
                   HomeAccessCard(
                     onManage: () => context.push('/onboarding/photos'),
@@ -84,6 +80,12 @@ class HomePage extends ConsumerWidget {
                       HomeCategoryCard(
                         category: category,
                         finding: snapshot.findings[category],
+                        onTap: () => context.go(switch (category) {
+                          CleanupCategory.similarPhotos => '/photos/similar',
+                          CleanupCategory.screenshots => '/photos/screenshots',
+                          CleanupCategory.largeVideos => '/videos',
+                          CleanupCategory.duplicateContacts => '/contacts',
+                        }),
                       ),
                   ],
                 ),
