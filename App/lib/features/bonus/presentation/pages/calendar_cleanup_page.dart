@@ -21,7 +21,7 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
   String _filter = 'old';
   String? _error;
   List<CalendarEventRecord> _events = [];
-  Set<String> _selected = {};
+  final Set<String> _selected = {};
   List<CalendarEventRecord> _reviewed = [];
   bool _busy = false;
   bool _review = false;
@@ -54,11 +54,12 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
       setState(() => _status = status);
       if (status == 'authorized') await _loadEvents();
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _status = 'error';
           _error = '$error';
         });
+      }
     }
   }
 
@@ -87,12 +88,13 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
     });
     try {
       final rows = await _service.calendarEvents();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _events = rows.map(CalendarEventRecord.fromMap).toList()
             ..sort((a, b) => b.start.compareTo(a.start));
           _status = 'authorized';
         });
+      }
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
     } finally {
@@ -140,9 +142,10 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
         _reviewed = [];
         _completed =
             '$deleted ${deleted == 1 ? 'event occurrence' : 'event occurrences'} removed';
-        if (failedKeys.isNotEmpty)
+        if (failedKeys.isNotEmpty) {
           _error =
               '${failedKeys.length} event occurrence(s) could not be removed. They remain available for review.';
+        }
       });
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
@@ -160,6 +163,30 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
       title: 'Calendar Cleanup',
       subtitle: 'Old and repeated events from about the past four years.',
       backLabel: 'Optional Features',
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Text('${_selected.length} selected'),
+              const Spacer(),
+              const Text('No storage estimate'),
+            ],
+          ),
+          const SizedBox(height: TidySpacing.sm),
+          TidyActionButton(
+            label: 'Review Events',
+            onPressed: _selected.isEmpty || _busy
+                ? null
+                : () => setState(() {
+                    _reviewed = List.unmodifiable(
+                      _events.where((event) => _selected.contains(_key(event))),
+                    );
+                    _review = true;
+                  }),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -197,30 +224,6 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
           ),
         ],
       ),
-      footer: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Text('${_selected.length} selected'),
-              const Spacer(),
-              const Text('No storage estimate'),
-            ],
-          ),
-          const SizedBox(height: TidySpacing.sm),
-          TidyActionButton(
-            label: 'Review Events',
-            onPressed: _selected.isEmpty || _busy
-                ? null
-                : () => setState(() {
-                    _reviewed = List.unmodifiable(
-                      _events.where((event) => _selected.contains(_key(event))),
-                    );
-                    _review = true;
-                  }),
-          ),
-        ],
-      ),
     );
   }
 
@@ -232,6 +235,10 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
         ? 'Allow full Calendar access in Settings to review event occurrences.'
         : 'Allow Calendar access to review old or repeated events. Access is requested only when you choose to continue.',
     backLabel: 'Optional Features',
+    footer: TextButton(
+      onPressed: () => Navigator.of(context).maybePop(),
+      child: const Text('Not Now'),
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -248,8 +255,9 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
             label: 'Open Settings',
             onPressed: () async {
               final opened = await _service.openCalendarSettings();
-              if (!opened && mounted)
+              if (!opened && mounted) {
                 setState(() => _error = 'Settings could not be opened.');
+              }
             },
           )
         else
@@ -258,10 +266,6 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
             onPressed: _requestAccess,
           ),
       ],
-    ),
-    footer: TextButton(
-      onPressed: () => Navigator.of(context).maybePop(),
-      child: const Text('Not Now'),
     ),
   );
 
@@ -274,22 +278,6 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
       _review = false;
       _reviewed = [];
     }),
-    child: Column(
-      children: [
-        for (final event in _reviewed) ...[
-          _CalendarEventTile(
-            event: event,
-            selected: false,
-            onTap: null,
-            review: true,
-          ),
-          const SizedBox(height: TidySpacing.sm),
-        ],
-        const SizedBox(height: TidySpacing.md),
-        const Text('Removing events cannot be undone in Tidy.'),
-        if (_error != null) _message(_error!, isError: true),
-      ],
-    ),
     footer: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -305,6 +293,22 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
           }),
           child: const Text('Cancel'),
         ),
+      ],
+    ),
+    child: Column(
+      children: [
+        for (final event in _reviewed) ...[
+          _CalendarEventTile(
+            event: event,
+            selected: false,
+            onTap: null,
+            review: true,
+          ),
+          const SizedBox(height: TidySpacing.sm),
+        ],
+        const SizedBox(height: TidySpacing.md),
+        const Text('Removing events cannot be undone in Tidy.'),
+        if (_error != null) _message(_error!, isError: true),
       ],
     ),
   );

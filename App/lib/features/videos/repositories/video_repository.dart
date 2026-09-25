@@ -41,6 +41,8 @@ class VideoRepository {
 
   Future<VideoDetails> details(String id) => service.details(id);
 
+  Future<void> playFullScreen(String id) => service.playFullScreen(id);
+
   Future<VideoDeletionOutcome> delete(List<VideoRecord> selected) {
     return service.delete(selected);
   }

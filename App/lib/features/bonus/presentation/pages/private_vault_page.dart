@@ -35,7 +35,9 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
   void initState() {
     super.initState();
     _lifecycleListener = AppLifecycleListener(
-      onInactive: _lockUi,
+      // iOS can become inactive for Photos' confirmation UI and other
+      // temporary system interruptions. Lock only when actually hidden or
+      // paused.
       onHide: _lockUi,
       onPause: _lockUi,
     );
@@ -45,15 +47,18 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
   Future<void> _loadVaultStatus() async {
     try {
       final configured = await _service.vaultIsConfigured();
-      if (!mounted) return;
+      if (!mounted || _vaultConfigured) return;
       setState(() {
         _vaultConfigured = configured;
         _setupChecked = true;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || _vaultConfigured) return;
       setState(() {
         _error = '$error';
+        // Fail closed with the existing-Vault action. Authentication can
+        // still initialize a first-use Vault, but setup is never repeated.
+        _vaultConfigured = true;
         _setupChecked = true;
       });
     }
@@ -67,7 +72,7 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
 
   void _lockUi() {
     if (!_unlocked && _items.isEmpty && _thumbnails.isEmpty) return;
-    if (_unlocked && !_busy) unawaited(_service.lockVault());
+    if (_unlocked) unawaited(_service.lockVault());
     setState(() {
       _unlocked = false;
       _items = [];
@@ -90,7 +95,7 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
         _vaultConfigured = true;
         _setupChecked = true;
         _unlocked = true;
-        _items = rows.map(VaultItemRecord.fromMap).toList(growable: false);
+        _items = VaultItemRecord.newestFirst(rows.map(VaultItemRecord.fromMap));
         _thumbnails.clear();
       });
     } catch (error) {
@@ -104,7 +109,11 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
     try {
       final rows = await _service.vaultItems();
       if (mounted) {
-        setState(() => _items = rows.map(VaultItemRecord.fromMap).toList());
+        setState(
+          () => _items = VaultItemRecord.newestFirst(
+            rows.map(VaultItemRecord.fromMap),
+          ),
+        );
       }
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
@@ -193,7 +202,7 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
         ),
         const SizedBox(height: TidySpacing.md),
         const Text(
-          'Adding a copy does not remove its original from Photos.',
+          'Move selected photos into encrypted Vault storage. After you confirm removal, their originals leave Photos. iOS may keep them in Recently Deleted; Tidy cannot permanently delete them there.',
           textAlign: TextAlign.center,
         ),
         if (_error != null) ...[
@@ -266,6 +275,7 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
                 label:
                     '${item.name}, ${_selected.contains(item.id) ? 'selected' : 'not selected'}',
                 child: GestureDetector(
+                  key: ValueKey(item.id),
                   onTap: () => setState(() {
                     if (!_selected.add(item.id)) _selected.remove(item.id);
                   }),
@@ -324,13 +334,8 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         TidyActionButton(
-          label: 'Add Items',
-          onPressed: _busy
-              ? null
-              : () async {
-                  await context.push('/bonus/vault/add');
-                  if (mounted) await _refresh();
-                },
+          label: 'Move to Vault',
+          onPressed: _busy ? null : _openMovePage,
         ),
         const SizedBox(height: TidySpacing.xs),
         TidyActionButton(
@@ -347,6 +352,25 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
       ],
     ),
   );
+
+  Future<void> _openMovePage() async {
+    setState(() => _busy = true);
+    String? message;
+    try {
+      message = await context.push<String>('/bonus/vault/add');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+    if (!mounted) return;
+    // An actual background transition locks the parent session. Do not issue
+    // a Vault read after the child route returns in that locked state.
+    if (_unlocked) await _refresh();
+    if (mounted && message != null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
 
   String _size(int bytes) => bytes >= 1024 * 1024
       ? '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB'

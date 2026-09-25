@@ -10,6 +10,7 @@ import '../../../scan/controllers/scan_controller.dart';
 import '../../../scan/models/scan_state.dart';
 import '../../services/group_eight_service.dart';
 import '../../widgets/bonus_page_frame.dart';
+import '../widgets/video_compression_preview.dart';
 
 enum _CompressionQuality { smaller, balanced, higher }
 
@@ -35,8 +36,17 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
   bool _removing = false;
   Uint8List? _originalPreview;
   Uint8List? _compressedPreview;
+  late final Future<Uint8List?> _originalPreviewFuture;
 
   GroupEightService get _service => ref.read(groupEightServiceProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    _originalPreviewFuture = _service.compressionThumbnail(
+      assetId: widget.assetId,
+    );
+  }
 
   MediaRecord? get _video {
     final scan = ref.read(scanControllerProvider);
@@ -114,30 +124,33 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         }
       }
     } on PlatformException catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _running = false;
           _error = error.message ?? 'Compression failed.';
           _errorCode = error.code;
         });
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _running = false;
           _error = '$error';
           _errorCode = 'compression_failed';
         });
+      }
     }
   }
 
   Future<void> _cancel() async {
     final id = _jobId;
     if (id != null) await _service.cancelCompression(id);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _running = false;
         _jobId = null;
       });
+    }
   }
 
   Future<void> _keepBoth() async {
@@ -157,11 +170,12 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         ),
       );
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _removing = false;
           _error = '$error';
         });
+      }
     }
   }
 
@@ -200,11 +214,12 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
       );
       context.pop();
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _removing = false;
           _error = '$error';
         });
+      }
     }
   }
 
@@ -215,8 +230,9 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         path: compressed ? _compressedPath : null,
       );
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Preview could not be opened: $error');
+      }
     }
   }
 
@@ -239,23 +255,57 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
       title: 'A smaller video.\nThe same memory.',
       subtitle: 'Choose the balance that works for you.',
       backLabel: 'Video',
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TidyActionButton(label: 'Compress', onPressed: _compress),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.video_file_outlined),
-              title: Text(
-                video.bytes == null
-                    ? 'Original size unavailable'
-                    : _size(video.bytes!),
-              ),
-              subtitle: Text(
-                '${video.width} × ${video.height} · ${_duration(video.duration)}',
+            child: Padding(
+              padding: const EdgeInsets.all(TidySpacing.sm),
+              child: Row(
+                children: [
+                  VideoCompressionPreview(
+                    aspectRatio: video.width > 0 && video.height > 0
+                        ? video.width / video.height
+                        : 1,
+                    preview: _originalPreviewFuture,
+                    onPlay: () => _playPreview(compressed: false),
+                  ),
+                  const SizedBox(width: TidySpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Original video'),
+                        Text(
+                          video.bytes == null
+                              ? 'Size unavailable'
+                              : _size(video.bytes!),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        Text(
+                          '${video.width} × ${video.height} · ${_duration(video.duration)}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           const SizedBox(height: TidySpacing.md),
+          Text('Compression', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: TidySpacing.xs),
           for (final option in _CompressionQuality.values) ...[
             _QualityOption(
               quality: option,
@@ -277,22 +327,17 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
           ],
         ],
       ),
-      footer: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TidyActionButton(label: 'Compress', onPressed: _compress),
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _progressPage() => BonusPageFrame(
     title: 'Making a little room.',
     subtitle: 'Creating a separate, smaller copy.',
+    footer: TidyActionButton(
+      label: 'Cancel',
+      style: TidyActionStyle.secondary,
+      onPressed: _cancel,
+    ),
     child: Column(
       children: [
         const Padding(
@@ -320,17 +365,31 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         ),
       ],
     ),
-    footer: TidyActionButton(
-      label: 'Cancel',
-      style: TidyActionStyle.secondary,
-      onPressed: _cancel,
-    ),
   );
 
   Widget _resultPage(MediaRecord video) => BonusPageFrame(
     title: 'Smaller. Still your moment.',
     subtitle: 'Preview both before deciding what to keep.',
     backLabel: 'Video',
+    footer: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TidyActionButton(
+          label: _saved ? 'Done' : 'Keep Both',
+          onPressed: _removing
+              ? null
+              : _saved
+              ? () => context.pop()
+              : _keepBoth,
+        ),
+        const SizedBox(height: TidySpacing.xs),
+        TidyActionButton(
+          label: 'Remove Original…',
+          style: TidyActionStyle.secondary,
+          onPressed: _removing ? null : _removeOriginal,
+        ),
+      ],
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -378,25 +437,6 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
         ],
       ],
     ),
-    footer: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TidyActionButton(
-          label: _saved ? 'Done' : 'Keep Both',
-          onPressed: _removing
-              ? null
-              : _saved
-              ? () => context.pop()
-              : _keepBoth,
-        ),
-        const SizedBox(height: TidySpacing.xs),
-        TidyActionButton(
-          label: 'Remove Original…',
-          style: TidyActionStyle.secondary,
-          onPressed: _removing ? null : _removeOriginal,
-        ),
-      ],
-    ),
   );
 
   Widget _errorPage(MediaRecord video) {
@@ -409,12 +449,6 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
           ? 'iOS reports there is not enough temporary space for this estimated copy. Your original is unchanged.'
           : 'Your original video hasn’t changed. Try again, or keep it just as it is.',
       backLabel: 'Video',
-      child: Center(
-        child: Icon(
-          lowSpace ? Icons.storage_outlined : Icons.video_file_outlined,
-          size: 88,
-        ),
-      ),
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -433,6 +467,12 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
             child: const Text('Cancel'),
           ),
         ],
+      ),
+      child: Center(
+        child: Icon(
+          lowSpace ? Icons.storage_outlined : Icons.video_file_outlined,
+          size: 88,
+        ),
       ),
     );
   }
@@ -455,8 +495,9 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
   }
 
   static String _size(int bytes) {
-    if (bytes >= 1024 * 1024 * 1024)
+    if (bytes >= 1024 * 1024 * 1024) {
       return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    }
     if (bytes >= 1024 * 1024) return '${(bytes / (1024 * 1024)).round()} MB';
     return '${(bytes / 1024).round()} KB';
   }
@@ -490,17 +531,18 @@ class _QualityOption extends StatelessWidget {
         'More detail, a larger file.',
       ),
     };
+    final selectedShape = RoundedRectangleBorder(
+      side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+      borderRadius: BorderRadius.circular(22),
+    );
     return Card(
-      shape: selected
-          ? RoundedRectangleBorder(
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(22),
-            )
-          : null,
+      shape: selected ? selectedShape : null,
+      clipBehavior: Clip.antiAlias,
+      elevation: selected ? 0 : null,
       child: ListTile(
+        shape: selected
+            ? RoundedRectangleBorder(borderRadius: selectedShape.borderRadius)
+            : null,
         onTap: onTap,
         title: Text(labels.$1),
         subtitle: Text(labels.$2),

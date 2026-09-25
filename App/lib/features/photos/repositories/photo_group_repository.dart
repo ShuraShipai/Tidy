@@ -5,7 +5,7 @@ class PhotoGroupRepository {
   const PhotoGroupRepository();
 
   List<MediaRecord> photos(ScanState scan) =>
-      scan.media.where((item) => !item.video).toList(growable: false);
+      List.unmodifiable(_ordered(scan.media.where((item) => !item.video)));
 
   List<MediaRecord> screenshots(ScanState scan) => scan.media
       .where((item) => !item.video && item.screenshot)

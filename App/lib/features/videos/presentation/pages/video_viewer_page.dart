@@ -9,7 +9,7 @@ import '../../controllers/videos_controller.dart';
 import '../../models/video_record.dart';
 import '../../repositories/video_repository.dart';
 import '../../widgets/video_library_state_panel.dart';
-import '../../widgets/video_player_surface.dart';
+import '../../widgets/video_detail_preview.dart';
 
 class VideoViewerPage extends ConsumerStatefulWidget {
   const VideoViewerPage({required this.assetId, super.key});
@@ -22,6 +22,8 @@ class VideoViewerPage extends ConsumerStatefulWidget {
 
 class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
   late Future<VideoDetails?> _details;
+  late Future<VideoPreviewData?> _preview;
+  String? _playbackError;
 
   @override
   void initState() {
@@ -36,10 +38,22 @@ class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
   }
 
   void _loadDetails() {
-    _details = ref
-        .read(videoRepositoryProvider)
+    final repository = ref.read(videoRepositoryProvider);
+    _details = repository
         .details(widget.assetId)
         .then((value) => value, onError: (Object _) => null);
+    _preview = repository
+        .preview(widget.assetId)
+        .then((value) => value, onError: (Object _) => null);
+  }
+
+  Future<void> _playVideo() async {
+    try {
+      await ref.read(videoRepositoryProvider).playFullScreen(widget.assetId);
+      if (mounted) setState(() => _playbackError = null);
+    } catch (error) {
+      if (mounted) setState(() => _playbackError = '$error');
+    }
   }
 
   @override
@@ -106,7 +120,7 @@ class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    VideoPlayerSurface(video: video),
+                    VideoDetailPreview(preview: _preview, onPlay: _playVideo),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         TidySpacing.lg,
@@ -136,6 +150,15 @@ class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
                                     ?.copyWith(color: Colors.white),
                               ),
                               const SizedBox(height: TidySpacing.md),
+                              if (_playbackError != null) ...[
+                                Text(
+                                  _playbackError!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                ),
+                                const SizedBox(height: TidySpacing.sm),
+                              ],
                               Row(
                                 children: [
                                   _metadata(
@@ -211,12 +234,6 @@ class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
           onPressed: () => context.pop(),
           icon: const Icon(Icons.chevron_left, color: Colors.white),
           label: const Text('Back', style: TextStyle(color: Colors.white)),
-        ),
-        const Spacer(),
-        IconButton(
-          tooltip: 'Close video preview',
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.close, color: Colors.white),
         ),
       ],
     ),

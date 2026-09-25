@@ -10,6 +10,8 @@ import 'package:tidy/features/scan/services/library_scan_service.dart';
 import 'package:tidy/features/videos/controllers/videos_controller.dart';
 import 'package:tidy/features/videos/models/video_record.dart';
 import 'package:tidy/features/videos/services/video_library_service.dart';
+import 'package:tidy/features/videos/widgets/video_detail_preview.dart';
+import 'package:tidy/features/videos/widgets/video_player_surface.dart';
 
 Map<String, Object?> _media(
   String id, {
@@ -68,6 +70,7 @@ class _VideoService extends VideoLibraryService {
   _VideoService();
 
   final List<Set<String>> deleteRequests = [];
+  final List<String> playbackRequests = [];
   Object? deleteError;
 
   @override
@@ -80,6 +83,11 @@ class _VideoService extends VideoLibraryService {
   @override
   Future<VideoDetails> details(String id) async =>
       VideoDetails(fileName: '$id.MOV', frameRate: 30);
+
+  @override
+  Future<void> playFullScreen(String id) async {
+    playbackRequests.add(id);
+  }
 
   @override
   Future<VideoDeletionOutcome> delete(List<VideoRecord> videos) async {
@@ -252,4 +260,58 @@ void main() {
       await container.read(scanControllerProvider.notifier).cancel();
     },
   );
+
+  testWidgets(
+    'video detail shows a compact preview and keeps cleanup selection',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final service = _VideoService();
+      final container = _container(service);
+      addTearDown(container.dispose);
+      await _loadScan(container);
+      final router = container.read(appRouterProvider);
+      router.go('/videos/viewer?id=largest');
+      await tester.pumpWidget(
+        UncontrolledProviderScope(container: container, child: const TidyApp()),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('largest.MOV'), findsOneWidget);
+      expect(find.text('Compress Video'), findsOneWidget);
+      expect(find.byTooltip('Close video preview'), findsNothing);
+      expect(tester.getSize(find.byType(VideoDetailPreview)).height, 200);
+
+      await tester.tap(find.text('Select for Cleanup'));
+      await tester.pump();
+      expect(find.text('Selected ✓'), findsOneWidget);
+      expect(find.text('Compress Video'), findsOneWidget);
+      expect(find.byType(VideoPlayerSurface), findsNothing);
+      expect(container.read(videosControllerProvider).selectedIds, {'largest'});
+      await tester.tap(find.byType(VideoDetailPreview));
+      await tester.pump();
+      expect(service.playbackRequests, ['largest']);
+      expect(find.text('Compress Video'), findsOneWidget);
+      await container.read(scanControllerProvider.notifier).cancel();
+    },
+  );
+
+  testWidgets('compact preview tap requests full-screen playback', (
+    tester,
+  ) async {
+    var played = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VideoDetailPreview(
+            preview: Future.value(const VideoPreviewData()),
+            onPlay: () => played = true,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(VideoDetailPreview));
+    expect(played, isTrue);
+  });
 }

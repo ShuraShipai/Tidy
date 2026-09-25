@@ -1,4 +1,5 @@
 import AVFoundation
+import AVKit
 import Flutter
 import Photos
 import UIKit
@@ -25,6 +26,8 @@ final class VideoLibraryNativeService {
       preview(call.arguments, result: result)
     case "details":
       details(call.arguments, result: result)
+    case "playFullScreen":
+      playFullScreen(call.arguments, result: result)
     case "delete":
       delete(call.arguments, result: result)
     default:
@@ -55,7 +58,7 @@ final class VideoLibraryNativeService {
     PHImageManager.default().requestImage(
       for: asset,
       targetSize: CGSize(width: width, height: height),
-      contentMode: .aspectFill,
+      contentMode: .aspectFit,
       options: options
     ) { image, info in
       if (info?[PHImageResultIsDegradedKey] as? Bool) == true { return }
@@ -98,6 +101,43 @@ final class VideoLibraryNativeService {
           result(["fileName": fileName as Any? ?? NSNull(),
                   "frameRate": frameRate.map(NSNumber.init(value:)) as Any? ?? NSNull(),
                   "local": (info?[PHImageResultIsInCloudKey] as? Bool) != true])
+        }
+      }
+    }
+  }
+
+  private func playFullScreen(_ arguments: Any?, result: @escaping FlutterResult) {
+    guard let args = arguments as? [String: Any], let identifier = args["id"] as? String else {
+      result(FlutterError(code: "invalid_arguments", message: "A video identifier is required.", details: nil))
+      return
+    }
+    guard canReadVideos, let asset = video(identifier) else {
+      result(FlutterError(code: "video_unavailable", message: "This video is no longer accessible.", details: nil))
+      return
+    }
+    let options = PHVideoRequestOptions()
+    options.isNetworkAccessAllowed = false
+    options.deliveryMode = .highQualityFormat
+    PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { avAsset, _, _ in
+      guard let avAsset else {
+        DispatchQueue.main.async {
+          result(FlutterError(code: "video_not_local", message: "This video is not stored locally and cannot be played while offline access is required.", details: nil))
+        }
+        return
+      }
+      DispatchQueue.main.async {
+        guard var presenter = UIApplication.shared.connectedScenes
+          .compactMap({ ($0 as? UIWindowScene)?.windows.first(where: \.isKeyWindow)?.rootViewController }).first else {
+          result(FlutterError(code: "video_player_unavailable", message: "Video playback could not be opened.", details: nil))
+          return
+        }
+        while let presented = presenter.presentedViewController { presenter = presented }
+        let controller = AVPlayerViewController()
+        controller.modalPresentationStyle = .fullScreen
+        controller.player = AVPlayer(playerItem: AVPlayerItem(asset: avAsset))
+        presenter.present(controller, animated: true) {
+          controller.player?.play()
+          result(nil)
         }
       }
     }

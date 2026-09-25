@@ -50,6 +50,7 @@ class VaultItemRecord {
     required this.id,
     required this.name,
     required this.createdAt,
+    required this.addedAt,
     required this.bytes,
   });
 
@@ -59,11 +60,24 @@ class VaultItemRecord {
     createdAt: DateTime.fromMillisecondsSinceEpoch(
       (map['created']! as num).round(),
     ),
+    addedAt: DateTime.fromMillisecondsSinceEpoch(
+      (map['addedAt'] as num?)?.round() ?? 0,
+    ),
     bytes: (map['bytes']! as num).toInt(),
   );
+
+  static List<VaultItemRecord> newestFirst(Iterable<VaultItemRecord> items) {
+    final indexed = items.toList(growable: false).asMap().entries.toList();
+    indexed.sort((left, right) {
+      final byTimestamp = right.value.createdAt.compareTo(left.value.createdAt);
+      return byTimestamp != 0 ? byTimestamp : left.key.compareTo(right.key);
+    });
+    return indexed.map((entry) => entry.value).toList(growable: false);
+  }
 
   final String id;
   final String name;
   final DateTime createdAt;
+  final DateTime addedAt;
   final int bytes;
 }

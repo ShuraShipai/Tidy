@@ -90,7 +90,9 @@ final class PhotoLibraryNativeService {
         var remaining = Set<String>()
         remainingAssets.enumerateObjects { asset, _, _ in remaining.insert(asset.localIdentifier) }
         let operationSucceeded = success && error == nil
-        let deleted = operationSucceeded ? identifiers.subtracting(remaining) : Set<String>()
+        // Report observed library state even if PhotoKit's operation-level
+        // flag is false; partial completion must not leave removed IDs in UI.
+        let deleted = identifiers.subtracting(remaining)
         DispatchQueue.main.async {
           result([
             "succeeded": operationSucceeded,

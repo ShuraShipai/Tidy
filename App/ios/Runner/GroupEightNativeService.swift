@@ -21,6 +21,14 @@ final class GroupEightNativeService {
     now.addingTimeInterval(-calendarLookback)
   }
 
+  static func newestVaultEntriesFirst(_ rows: [[String: Any]]) -> [[String: Any]] {
+    rows.enumerated().sorted { lhs, rhs in
+      let left = (lhs.element["created"] as? NSNumber)?.doubleValue ?? 0
+      let right = (rhs.element["created"] as? NSNumber)?.doubleValue ?? 0
+      return left == right ? lhs.offset < rhs.offset : left > right
+    }.map(\.element)
+  }
+
   private let eventStore = EKEventStore()
   private let lock = NSLock()
   private let vaultQueue = DispatchQueue(label: "com.example.tidy.private-vault", qos: .userInitiated)
@@ -211,9 +219,9 @@ final class GroupEightNativeService {
       self.vaultQueue.async {
         do {
           let key = try self.loadOrCreateVaultKey(context: context)
+          let count = try self.readVaultIndex().count
           UserDefaults.standard.set(true, forKey: Self.vaultConfiguredDefaultsKey)
           self.lock.lock(); self.vaultKey = key; self.vaultUnlocked = true; self.lock.unlock()
-          let count = self.readVaultIndex().count
           DispatchQueue.main.async { result(["unlocked": true, "items": count]) }
         } catch { DispatchQueue.main.async { result(FlutterError(code: "vault_key", message: error.localizedDescription, details: nil)) } }
       }
@@ -256,6 +264,12 @@ final class GroupEightNativeService {
     let status = SecItemCopyMatching(query as CFDictionary, &item)
     if status == errSecSuccess, let data = item as? Data { return SymmetricKey(data: data) }
     guard status == errSecItemNotFound else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(status)) }
+    let hasExistingCopies = !(try readVaultIndex()).isEmpty ||
+      ((try? FileManager.default.contentsOfDirectory(at: vaultFolder, includingPropertiesForKeys: nil)) ?? [])
+        .contains { $0.lastPathComponent.hasSuffix(".sealed") || $0.lastPathComponent.hasSuffix(".sealed.pending-delete") }
+    guard !UserDefaults.standard.bool(forKey: Self.vaultConfiguredDefaultsKey), !hasExistingCopies else {
+      throw NSError(domain: "TidyVault", code: 4, userInfo: [NSLocalizedDescriptionKey: "The Vault encryption key is unavailable. Existing encrypted copies have been left untouched."])
+    }
     var bytes = Data(count: 32); let randomStatus = bytes.withUnsafeMutableBytes { SecRandomCopyBytes(kSecRandomDefault, 32, $0.baseAddress!) }
     guard randomStatus == errSecSuccess else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(randomStatus)) }
     var accessError: Unmanaged<CFError>?
@@ -277,8 +291,12 @@ final class GroupEightNativeService {
         DispatchQueue.main.async { result(FlutterError(code: "vault_locked", message: "Unlock the Vault to view private copies.", details: nil)) }
         return
       }
-      let rows = self.readVaultIndex()
-      DispatchQueue.main.async { result(rows) }
+      do {
+        let rows = Self.newestVaultEntriesFirst(try self.readVaultIndex())
+        DispatchQueue.main.async { result(rows) }
+      } catch {
+        DispatchQueue.main.async { result(FlutterError(code: "vault_index", message: error.localizedDescription, details: nil)) }
+      }
     }
   }
 
@@ -289,7 +307,7 @@ final class GroupEightNativeService {
     vaultQueue.async {
       do {
         guard self.isVaultUnlocked,
-              let entry = self.readVaultIndex().first(where: { $0["id"] as? String == id }),
+              let entry = try self.readVaultIndex().first(where: { $0["id"] as? String == id }),
               let file = entry["file"] as? String,
               let key = self.currentVaultKey else {
           DispatchQueue.main.async { result(FlutterError(code: "vault_locked", message: "Unlock the Vault to view private copies.", details: nil)) }
@@ -325,43 +343,111 @@ final class GroupEightNativeService {
       guard let self else { return }
       let assets = PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil)
       var fetched = Set<String>(); assets.enumerateObjects { a, _, _ in if a.mediaType == .image { fetched.insert(a.localIdentifier) } }
-      guard fetched == Set(ids) else {
-        DispatchQueue.main.async { result(FlutterError(code: "vault_selection_changed", message: "Some selected photos are no longer accessible. Refresh your selection.", details: Array(Set(ids).subtracting(fetched)))) }
-        return
-      }
       guard self.isVaultUnlocked, let key = self.currentVaultKey else {
         DispatchQueue.main.async { result(FlutterError(code: "vault_locked", message: "Unlock the Vault and select photos to add.", details: nil)) }
         return
       }
-      var entries = self.readVaultIndex()
-      var added = 0
+      var entries: [[String: Any]]
       do {
-       for identifier in ids where !entries.contains(where: { $0["source"] as? String == identifier }) {
-        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject else { continue }
-        let resources = PHAssetResource.assetResources(for: asset)
-        guard let resource = resources.first(where: { $0.type == .photo || $0.type == .fullSizePhoto }) else { continue }
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let options = PHAssetResourceRequestOptions(); options.isNetworkAccessAllowed = false
-        let semaphore = DispatchSemaphore(value: 0); var transferError: Error?
-        PHAssetResourceManager.default().writeData(for: resource, toFile: temp, options: options) { transferError = $0; semaphore.signal() }
-        semaphore.wait()
-        defer { try? FileManager.default.removeItem(at: temp) }
-        if let transferError { throw transferError }
-        let plain = try Data(contentsOf: temp)
-        let sealed = try AES.GCM.seal(plain, using: key).combined!
-        let id = UUID().uuidString
-        let file = "\(id).sealed"
-        try sealed.write(to: self.vaultFolder.appendingPathComponent(file), options: .atomic)
-        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: self.vaultFolder.appendingPathComponent(file).path)
-        let cipherBytes = (try? FileManager.default.attributesOfItem(atPath: self.vaultFolder.appendingPathComponent(file).path)[.size] as? NSNumber)?.intValue ?? 0
-        entries.append(["id": id, "source": identifier, "file": file, "name": resource.originalFilename,
-                        "created": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
-                        "bytes": cipherBytes])
-        added += 1
+        entries = try self.readVaultIndex()
+      } catch {
+        DispatchQueue.main.async { result(FlutterError(code: "vault_index", message: error.localizedDescription, details: nil)) }
+        return
       }
-       try self.writeVaultIndex(entries)
-       DispatchQueue.main.async { result(["added": added, "items": entries.count]) }
-      } catch { DispatchQueue.main.async { result(FlutterError(code: "vault_import_failed", message: error.localizedDescription, details: nil)) } }
+      let originalEntries = entries
+      let existingSources = Set(entries.compactMap { $0["source"] as? String })
+      let alreadyVaulted = Array(Set(ids).intersection(existingSources))
+      var failures = [[String: String]]()
+      var candidateEntries = [[String: Any]]()
+      var createdFiles = [URL]()
+      for identifier in ids where !existingSources.contains(identifier) {
+        var currentDestination: URL?
+        do {
+          guard fetched.contains(identifier) else {
+            throw NSError(domain: "TidyVault", code: 11, userInfo: [NSLocalizedDescriptionKey: "The selected photo is no longer accessible."])
+          }
+          guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject,
+                asset.mediaType == .image else { throw NSError(domain: "TidyVault", code: 5, userInfo: [NSLocalizedDescriptionKey: "The selected photo is no longer available."]) }
+          let resources = PHAssetResource.assetResources(for: asset)
+          guard let resource = resources.first(where: { $0.type == .photo || $0.type == .fullSizePhoto }) else {
+            throw NSError(domain: "TidyVault", code: 6, userInfo: [NSLocalizedDescriptionKey: "The selected photo resource is unavailable."])
+          }
+          let temporaryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+          defer { try? FileManager.default.removeItem(at: temporaryURL) }
+          let options = PHAssetResourceRequestOptions(); options.isNetworkAccessAllowed = false
+          let semaphore = DispatchSemaphore(value: 0); var transferError: Error?
+          PHAssetResourceManager.default().writeData(for: resource, toFile: temporaryURL, options: options) { error in
+            transferError = error; semaphore.signal()
+          }
+          semaphore.wait()
+          if let transferError { throw transferError }
+          let plain = try Data(contentsOf: temporaryURL, options: .mappedIfSafe)
+          guard let sealed = try AES.GCM.seal(plain, using: key).combined else {
+            throw NSError(domain: "TidyVault", code: 7, userInfo: [NSLocalizedDescriptionKey: "Encryption did not produce a complete Vault copy."])
+          }
+          let recordID = UUID().uuidString
+          let filename = "\(recordID).sealed"
+          let destination = self.vaultFolder.appendingPathComponent(filename)
+          try sealed.write(to: destination, options: .atomic)
+          createdFiles.append(destination)
+          currentDestination = destination
+          try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: destination.path)
+
+          // Read the encrypted file back from disk, authenticate/decrypt it,
+          // and compare it to the source bytes before it can be offered for
+          // Photos removal. The stored representation remains encrypted.
+          let persistedCiphertext = try Data(contentsOf: destination, options: .mappedIfSafe)
+          let box = try AES.GCM.SealedBox(combined: persistedCiphertext)
+          let verifiedPlaintext = try AES.GCM.open(box, using: key)
+          guard verifiedPlaintext == plain else {
+            throw NSError(domain: "TidyVault", code: 8, userInfo: [NSLocalizedDescriptionKey: "The encrypted copy did not pass verification."])
+          }
+          let cipherBytes = (try FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0
+          candidateEntries.append([
+            "id": recordID, "source": identifier, "file": filename,
+            "name": resource.originalFilename,
+            "created": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
+            "addedAt": Date().timeIntervalSince1970 * 1000,
+            "bytes": cipherBytes,
+          ])
+          currentDestination = nil
+        } catch {
+          if let currentDestination { try? FileManager.default.removeItem(at: currentDestination) }
+          failures.append(["id": identifier, "message": error.localizedDescription])
+        }
+      }
+
+      entries.append(contentsOf: candidateEntries)
+      do {
+        if !candidateEntries.isEmpty { try self.writeVaultIndex(entries) }
+        // Bypass the in-memory index cache so originals are never offered for
+        // deletion unless the index and encrypted files are readable on disk.
+        let diskEntries = try self.readVaultIndexFromDisk()
+        let verified = candidateEntries.compactMap { candidate -> String? in
+          guard let source = candidate["source"] as? String,
+                let filename = candidate["file"] as? String,
+                diskEntries.contains(where: { $0["source"] as? String == source && $0["file"] as? String == filename }),
+                FileManager.default.fileExists(atPath: self.vaultFolder.appendingPathComponent(filename).path) else { return nil }
+          return source
+        }
+        let verifiedSet = Set(verified)
+        let unverified = candidateEntries.compactMap { $0["source"] as? String }.filter { !verifiedSet.contains($0) }
+        failures.append(contentsOf: unverified.map { ["id": $0, "message": "The Vault copy could not be confirmed in storage."] })
+        DispatchQueue.main.async {
+          result(["verified": verified, "alreadyVaulted": alreadyVaulted, "failures": failures])
+        }
+      } catch {
+        // Restore the prior index before cleaning any new encrypted files.
+        // If restoration fails, leave the encrypted data untouched and still
+        // do not authorize source deletion.
+        let restored = (try? self.writeVaultIndex(originalEntries)) != nil
+        if restored { for file in createdFiles { try? FileManager.default.removeItem(at: file) } }
+        self.vaultEntriesCache = nil
+        DispatchQueue.main.async {
+          result(["verified": [String](), "alreadyVaulted": alreadyVaulted,
+                  "failures": failures + ids.map { ["id": $0, "message": "Vault index could not be safely saved: \(error.localizedDescription)"] }])
+        }
+      }
     }
   }
 
@@ -374,7 +460,15 @@ final class GroupEightNativeService {
         DispatchQueue.main.async { result(FlutterError(code: "vault_locked", message: "Unlock the Vault before removing private copies.", details: nil)) }
         return
       }
-      let idSet = Set(ids); var entries = self.readVaultIndex(); let targets = entries.filter { idSet.contains($0["id"] as? String ?? "") }
+      let idSet = Set(ids)
+      var entries: [[String: Any]]
+      do {
+        entries = try self.readVaultIndex()
+      } catch {
+        DispatchQueue.main.async { result(FlutterError(code: "vault_index", message: error.localizedDescription, details: nil)) }
+        return
+      }
+      let targets = entries.filter { idSet.contains($0["id"] as? String ?? "") }
       guard targets.count == idSet.count else {
         DispatchQueue.main.async { result(FlutterError(code: "vault_selection_changed", message: "Some Vault copies changed. Review your selection again.", details: nil)) }
         return
@@ -418,13 +512,36 @@ final class GroupEightNativeService {
   private var isVaultUnlocked: Bool { lock.lock(); defer { lock.unlock() }; return vaultUnlocked && vaultKey != nil }
   private var currentVaultKey: SymmetricKey? { lock.lock(); defer { lock.unlock() }; return vaultKey }
 
-  private func readVaultIndex() -> [[String: Any]] {
+  private func readVaultIndex() throws -> [[String: Any]] {
     if let vaultEntriesCache { return vaultEntriesCache }
-    guard let data = try? Data(contentsOf: vaultIndexURL, options: .mappedIfSafe), let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-      vaultEntriesCache = []
-      return []
+    var rows = try readVaultIndexFromDisk()
+    // Older Vault indexes only stored capture time. Migrate them once using
+    // their append order as the best available record of import order.
+    let missing = rows.indices.filter { !(rows[$0]["addedAt"] is NSNumber) }
+    if !missing.isEmpty {
+      let earliestExisting = rows.compactMap { ($0["addedAt"] as? NSNumber)?.doubleValue }.min()
+        ?? Date().timeIntervalSince1970 * 1000
+      let base = earliestExisting - Double(missing.count + 1)
+      for (offset, index) in missing.enumerated() {
+        rows[index]["addedAt"] = base + Double(offset)
+      }
+      // Do not cache inferred timestamps unless the migration reached disk.
+      // Returning an error keeps unlock/listing from pretending the order is
+      // persistent when only an in-memory view could be built.
+      try writeVaultIndex(rows)
     }
     vaultEntriesCache = rows
+    return rows
+  }
+
+  private func readVaultIndexFromDisk() throws -> [[String: Any]] {
+    guard let data = try? Data(contentsOf: vaultIndexURL, options: .mappedIfSafe) else {
+      if !FileManager.default.fileExists(atPath: vaultIndexURL.path) { return [] }
+      throw NSError(domain: "TidyVault", code: 9, userInfo: [NSLocalizedDescriptionKey: "Vault index could not be read."])
+    }
+    guard let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+      throw NSError(domain: "TidyVault", code: 10, userInfo: [NSLocalizedDescriptionKey: "Vault index is invalid."])
+    }
     return rows
   }
 
@@ -537,7 +654,9 @@ final class GroupEightNativeService {
       result(FlutterError(code: "compression_preview", message: "Video preview could not be opened.", details: nil)); return
     }
     while let presented = presenter.presentedViewController { presenter = presented }
-    let controller = AVPlayerViewController(); controller.player = player
+    let controller = AVPlayerViewController()
+    controller.modalPresentationStyle = .fullScreen
+    controller.player = player
     presenter.present(controller, animated: true) { player.play(); result(nil) }
   }
 
@@ -603,7 +722,8 @@ final class GroupEightNativeService {
   }
 
   private func recoverPendingVaultRemovals() {
-    let indexedFiles = Set(readVaultIndex().compactMap { $0["file"] as? String })
+    guard let entries = try? readVaultIndex() else { return }
+    let indexedFiles = Set(entries.compactMap { $0["file"] as? String })
     guard let files = try? FileManager.default.contentsOfDirectory(at: vaultFolder, includingPropertiesForKeys: nil) else { return }
     let suffix = ".pending-delete"
     for tombstone in files where tombstone.lastPathComponent.hasSuffix(suffix) {

@@ -41,6 +41,11 @@ class VideoLibraryService {
     );
   }
 
+  Future<void> playFullScreen(String id) async {
+    _requireIos();
+    await _channel.invokeMethod<void>('playFullScreen', {'id': id});
+  }
+
   Future<VideoDeletionOutcome> delete(List<VideoRecord> selected) async {
     _requireIos();
     if (selected.isEmpty) {

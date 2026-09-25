@@ -8,6 +8,7 @@ MediaRecord _photo(
   required String hash,
   required int bytes,
   required int width,
+  int? createdAt,
   bool screenshot = false,
 }) => MediaRecord.fromMap({
   'id': id,
@@ -19,7 +20,7 @@ MediaRecord _photo(
   'height': width,
   'duration': 0,
   'favorite': false,
-  'createdAt': DateTime(2025, 2, 3).millisecondsSinceEpoch,
+  'createdAt': createdAt ?? DateTime(2025, 2, 3).millisecondsSinceEpoch,
 });
 
 void main() {
@@ -74,6 +75,54 @@ void main() {
       'asset-b',
       'asset-c',
     });
+  });
+
+  test('Swipe Clean photos are ordered newest capture date first', () {
+    final older = _photo(
+      'older',
+      hash: 'older-hash',
+      bytes: 100,
+      width: 100,
+      createdAt: 100,
+    );
+    final newer = _photo(
+      'newer',
+      hash: 'newer-hash',
+      bytes: 100,
+      width: 100,
+      createdAt: 300,
+    );
+    final unknownDate = MediaRecord.fromMap({
+      'id': 'unknown',
+      'video': false,
+      'screenshot': false,
+      'bytes': 100,
+      'width': 100,
+      'height': 100,
+      'duration': 0,
+      'favorite': false,
+    });
+    final video = MediaRecord.fromMap({
+      'id': 'video',
+      'video': true,
+      'screenshot': false,
+      'bytes': 100,
+      'width': 100,
+      'height': 100,
+      'duration': 1,
+      'favorite': false,
+      'createdAt': 500,
+    });
+
+    final scan = ScanState(
+      phase: ScanPhase.success,
+      media: [older, unknownDate, video, newer],
+    );
+
+    expect(
+      repository.photos(scan).map((photo) => photo.id),
+      ['newer', 'older', 'unknown'],
+    );
   });
 
   test(

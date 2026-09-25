@@ -14,6 +14,7 @@ class PhotoAssetThumbnail extends ConsumerWidget {
     required this.selected,
     required this.onPreview,
     required this.onToggleSelection,
+    this.onTap,
     this.isKeeper = false,
     this.onChooseKeeper,
     this.semanticContext = 'photo',
@@ -24,6 +25,7 @@ class PhotoAssetThumbnail extends ConsumerWidget {
   final bool selected;
   final VoidCallback onPreview;
   final VoidCallback onToggleSelection;
+  final VoidCallback? onTap;
   final bool isKeeper;
   final VoidCallback? onChooseKeeper;
   final String semanticContext;
@@ -52,7 +54,7 @@ class PhotoAssetThumbnail extends ConsumerWidget {
                 Material(
                   color: TidyColors.violetTint,
                   child: InkWell(
-                    onTap: onChooseKeeper ?? onPreview,
+                    onTap: onTap ?? onChooseKeeper ?? onPreview,
                     child: image.when(
                       data: (bytes) => bytes == null
                           ? const PhotoThumbnailUnavailablePlaceholder()

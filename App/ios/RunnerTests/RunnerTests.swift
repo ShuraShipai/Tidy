@@ -43,4 +43,11 @@ class RunnerTests: XCTestCase {
     XCTAssertLessThan(now.timeIntervalSince(start), 4 * 366 * 24 * 60 * 60)
   }
 
+  func testVaultOrderingUsesNewestCaptureDateInsteadOfImportTimestamp() {
+    let older = ["id": "older", "created": 1_000.0, "addedAt": 200.0] as [String: Any]
+    let newer = ["id": "newer", "created": 9_000.0, "addedAt": 100.0] as [String: Any]
+    let rows = GroupEightNativeService.newestVaultEntriesFirst([older, newer])
+    XCTAssertEqual(rows.compactMap { $0["id"] as? String }, ["older", "newer"])
+  }
+
 }

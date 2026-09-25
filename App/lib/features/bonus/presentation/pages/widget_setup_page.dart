@@ -33,6 +33,24 @@ class _WidgetSetupPageState extends ConsumerState<WidgetSetupPage> {
       title: 'A little space.\nAt a glance.',
       subtitle: 'Add a Tidy storage widget to your Home Screen.',
       backLabel: 'Optional Features',
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!ready)
+            TidyActionButton(
+              label: _busy ? 'Updating…' : 'Open Scan',
+              onPressed: _busy || summary.phase == ScanPhase.scanning
+                  ? null
+                  : () => context.push('/scan?start=true'),
+            )
+          else
+            TidyActionButton(
+              label: _busy ? 'Updating…' : 'Update Widget Summary',
+              onPressed: _busy ? null : () => _publish(summary),
+            ),
+          TextButton(onPressed: () => context.pop(), child: const Text('Done')),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -133,24 +151,6 @@ class _WidgetSetupPageState extends ConsumerState<WidgetSetupPage> {
             ),
         ],
       ),
-      footer: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!ready)
-            TidyActionButton(
-              label: _busy ? 'Updating…' : 'Open Scan',
-              onPressed: _busy || summary.phase == ScanPhase.scanning
-                  ? null
-                  : () => context.push('/scan?start=true'),
-            )
-          else
-            TidyActionButton(
-              label: _busy ? 'Updating…' : 'Update Widget Summary',
-              onPressed: _busy ? null : () => _publish(summary),
-            ),
-          TextButton(onPressed: () => context.pop(), child: const Text('Done')),
-        ],
-      ),
     );
   }
 
@@ -177,14 +177,16 @@ class _WidgetSetupPageState extends ConsumerState<WidgetSetupPage> {
         'scannedAt': snapshot.lastScanned?.millisecondsSinceEpoch,
         'updatedAt': DateTime.now().millisecondsSinceEpoch,
       });
-      if (mounted)
+      if (mounted) {
         setState(
           () => _message =
               'Widget summary updated. Add the Tidy widget from your Home Screen to view it.',
         );
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Widget summary could not be updated: $error');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
