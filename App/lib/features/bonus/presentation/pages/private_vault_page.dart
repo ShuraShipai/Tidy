@@ -103,8 +103,9 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
   Future<void> _refresh() async {
     try {
       final rows = await _service.vaultItems();
-      if (mounted)
+      if (mounted) {
         setState(() => _items = rows.map(VaultItemRecord.fromMap).toList());
+      }
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
     }
@@ -143,13 +144,14 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
 
   Future<void> _lock() async {
     if (_unlocked) await _service.lockVault();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _unlocked = false;
         _items = [];
         _selected.clear();
         _thumbnails.clear();
       });
+    }
   }
 
   @override
@@ -164,6 +166,23 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
     title: 'Private Vault',
     subtitle: 'Protect selected copies using Face ID or your device passcode.',
     backLabel: 'Optional Features',
+    footer: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TidyActionButton(
+          label: !_setupChecked
+              ? 'Checking Vault…'
+              : _vaultConfigured
+              ? 'Unlock Vault'
+              : 'Set Up Vault',
+          onPressed: _busy || !_setupChecked ? null : _unlock,
+        ),
+        TextButton(
+          onPressed: () => context.pop(),
+          child: const Text('Not Now'),
+        ),
+      ],
+    ),
     child: Column(
       children: [
         const Icon(Icons.lock_outline, size: 100),
@@ -189,23 +208,6 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
             padding: EdgeInsets.all(TidySpacing.md),
             child: CircularProgressIndicator(),
           ),
-      ],
-    ),
-    footer: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TidyActionButton(
-          label: !_setupChecked
-              ? 'Checking Vault…'
-              : _vaultConfigured
-              ? 'Unlock Vault'
-              : 'Set Up Vault',
-          onPressed: _busy || !_setupChecked ? null : _unlock,
-        ),
-        TextButton(
-          onPressed: () => context.pop(),
-          child: const Text('Not Now'),
-        ),
       ],
     ),
   );

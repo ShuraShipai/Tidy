@@ -131,20 +131,6 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
           ? 'Allow Photos access in Settings before copying library items into your Vault.'
           : 'Use the shared library scan to discover photos available to review.',
       backLabel: 'Vault',
-      child: Column(
-        children: [
-          if (scan.running) ...[
-            const CircularProgressIndicator(),
-            const SizedBox(height: TidySpacing.md),
-            const Text('The library scan is already running.'),
-          ] else if (hasResults)
-            const Text('There are no accessible photos to add to the Vault.'),
-          if (scan.phase == ScanPhase.error || scan.phase == ScanPhase.stale)
-            const Text(
-              'The saved scan needs a refresh before you can select photos.',
-            ),
-        ],
-      ),
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -159,6 +145,20 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
           ),
         ],
       ),
+      child: Column(
+        children: [
+          if (scan.running) ...[
+            const CircularProgressIndicator(),
+            const SizedBox(height: TidySpacing.md),
+            const Text('The library scan is already running.'),
+          ] else if (hasResults)
+            const Text('There are no accessible photos to add to the Vault.'),
+          if (scan.phase == ScanPhase.error || scan.phase == ScanPhase.stale)
+            const Text(
+              'The saved scan needs a refresh before you can select photos.',
+            ),
+        ],
+      ),
     );
   }
 
@@ -171,8 +171,9 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
       await ref.read(groupEightServiceProvider).addVaultItems(ids);
       if (mounted) context.pop();
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Some copies could not be added: $error');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -190,6 +191,7 @@ class _VaultScanViewState {
     if (other is! _VaultScanViewState) return false;
     final a = state;
     final b = other.state;
+    if (identical(a, b)) return true;
     if (identical(a, b)) return true;
     if (a.phase != b.phase ||
         a.running != b.running ||
