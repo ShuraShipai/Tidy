@@ -4,6 +4,7 @@ import '../../../../core/design/tidy_colors.dart';
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
 import '../../controllers/contacts_controller.dart';
+import '../../widgets/selectable_contact_row.dart';
 import '../../models/contact_record.dart';
 
 class ContactDeleteReviewPage extends ConsumerStatefulWidget {
@@ -95,7 +96,7 @@ class _ContactDeleteReviewPageState
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
                       children: [
                         for (final c in state.contacts)
-                          _SelectableContact(
+                          SelectableContactRow(
                             contact: c,
                             selected: state.selected.contains(c.id),
                             onTap: () => ctl.toggle(c.id),
@@ -193,30 +194,4 @@ class _ContactDeleteReviewPageState
       if (mounted) setState(() => busy = false);
     }
   }
-}
-
-class _SelectableContact extends StatelessWidget {
-  const _SelectableContact({
-    required this.contact,
-    required this.selected,
-    required this.onTap,
-  });
-  final ContactRecord contact;
-  final bool selected;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Card(
-    color: TidyColors.surface,
-    child: CheckboxListTile(
-      value: selected,
-      onChanged: (_) => onTap(),
-      title: Text(contact.name),
-      subtitle: Text([...contact.phones, ...contact.emails].join(' · ')),
-      secondary: CircleAvatar(
-        backgroundColor: TidyColors.orbGreenLight,
-        child: Text(contact.initials),
-      ),
-      controlAffinity: ListTileControlAffinity.trailing,
-    ),
-  );
 }

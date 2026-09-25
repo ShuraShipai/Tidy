@@ -8,13 +8,18 @@ import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../scan/controllers/scan_controller.dart';
 import '../../../scan/models/scan_state.dart';
 import '../../controllers/photo_selection_controller.dart';
-import '../../models/photo_format.dart';
 import '../../models/photo_group.dart';
 import '../../repositories/photo_group_repository.dart';
 import '../../services/photo_library_service.dart';
 import '../../widgets/photo_analysis_note.dart';
 import '../../widgets/photo_asset_thumbnail.dart';
 import '../../widgets/photo_collection_state.dart';
+import '../../widgets/photo_clean_empty_state.dart';
+import '../../widgets/photo_collection_metrics.dart';
+import '../../widgets/photo_limited_access_note.dart';
+import '../../widgets/similar_photo_filter_bar.dart';
+import '../../widgets/no_photo_groups_filter_state.dart';
+import '../../widgets/blurry_analysis_incomplete_state.dart';
 import '../../widgets/photo_group_card.dart';
 import '../../widgets/photo_page_top_bar.dart';
 import '../../widgets/photo_selection_bar.dart';
@@ -56,7 +61,7 @@ class _PhotoCollectionPageState extends ConsumerState<PhotoCollectionPage> {
     if (allPhotos.isEmpty) {
       if (widget.kind == PhotoCollectionKind.blurry &&
           repository.getBlurryAnalysisIncomplete(scan)) {
-        return _BlurryAnalysisIncompletePage();
+        return const BlurryAnalysisIncompleteState();
       }
       return Scaffold(
         body: TidyPageBackground(
@@ -140,7 +145,7 @@ class _PhotoCollectionPageState extends ConsumerState<PhotoCollectionPage> {
                             ),
                           ],
                           const SizedBox(height: TidySpacing.lg),
-                          _PhotoMetrics(
+                          PhotoCollectionMetrics(
                             count: contentCount,
                             bytes: contentBytes,
                           ),
@@ -156,14 +161,14 @@ class _PhotoCollectionPageState extends ConsumerState<PhotoCollectionPage> {
                           ],
                           if (widget.kind == PhotoCollectionKind.similar) ...[
                             const SizedBox(height: TidySpacing.md),
-                            _SimilarFilterBar(
+                            SimilarPhotoFilterBar(
                               selected: _filter,
                               onChanged: (value) =>
                                   setState(() => _filter = value),
                             ),
                             const SizedBox(height: TidySpacing.lg),
                             if (visibleGroups.isEmpty)
-                              _NoGroupsForFilter(filter: _filter)
+                              NoPhotoGroupsFilterState(filter: _filter)
                             else
                               for (final group in visibleGroups) ...[
                                 PhotoGroupCard(
@@ -402,132 +407,6 @@ class _PhotoCollectionPageState extends ConsumerState<PhotoCollectionPage> {
     if (items.any((item) => item.bytes == null)) return null;
     return items.fold<int>(0, (sum, item) => sum + item.bytes!);
   }
-}
-
-class _PhotoMetrics extends StatelessWidget {
-  const _PhotoMetrics({required this.count, required this.bytes});
-
-  final int count;
-  final int? bytes;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Text('$count', style: Theme.of(context).textTheme.headlineLarge),
-      const SizedBox(width: TidySpacing.xs),
-      Text('photos', style: Theme.of(context).textTheme.bodyMedium),
-      const SizedBox(width: TidySpacing.md),
-      Container(width: 1, height: 24, color: TidyColors.divider),
-      const SizedBox(width: TidySpacing.md),
-      Expanded(
-        child: Text(
-          '${bytes == null ? 'Size unavailable' : formatPhotoSize(bytes!)} reviewable',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ),
-    ],
-  );
-}
-
-class _SimilarFilterBar extends StatelessWidget {
-  const _SimilarFilterBar({required this.selected, required this.onChanged});
-
-  final SimilarPhotoFilter selected;
-  final ValueChanged<SimilarPhotoFilter> onChanged;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: TidyColors.violetTint,
-      borderRadius: BorderRadius.circular(TidySpacing.md),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          for (final filter in SimilarPhotoFilter.values)
-            Expanded(
-              child: Material(
-                color: selected == filter
-                    ? TidyColors.surface
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(TidySpacing.sm),
-                child: InkWell(
-                  onTap: () => onChanged(filter),
-                  borderRadius: BorderRadius.circular(TidySpacing.sm),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      switch (filter) {
-                        SimilarPhotoFilter.all => 'All',
-                        SimilarPhotoFilter.duplicates => 'Duplicates',
-                        SimilarPhotoFilter.similar => 'Similar',
-                      },
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: selected == filter
-                            ? TidyColors.violetDeep
-                            : TidyColors.secondaryText,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _NoGroupsForFilter extends StatelessWidget {
-  const _NoGroupsForFilter({required this.filter});
-
-  final SimilarPhotoFilter filter;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: TidySpacing.xl),
-      child: Text(
-        filter == SimilarPhotoFilter.duplicates
-            ? 'No exact duplicate groups were found.'
-            : 'No similar photo groups were found.',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-    ),
-  );
-}
-
-class _BlurryAnalysisIncompletePage extends StatelessWidget {
-  const _BlurryAnalysisIncompletePage();
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: TidyPageBackground(
-      child: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: TidySpacing.lg),
-              child: PhotoPageTopBar(backLabel: 'Photos'),
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(TidySpacing.lg),
-              child: Text(
-                'Some photos couldn’t be checked for blur.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
-            ),
-            const Spacer(),
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 enum _ScreenshotSort {

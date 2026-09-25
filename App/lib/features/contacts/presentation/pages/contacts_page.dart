@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design/tidy_colors.dart';
-import '../../../../core/design/tidy_spacing.dart';
-import '../../../../core/widgets/tidy_action_button.dart';
 import '../../../onboarding/services/onboarding_service.dart';
 import '../../controllers/contacts_controller.dart';
 import '../../widgets/contact_match_card.dart';
+import '../../widgets/contact_state_page.dart';
 import 'contact_review_page.dart';
 import 'contact_delete_review_page.dart';
 
@@ -48,7 +47,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
         child: async.when(
           loading: () =>
               const Center(child: CircularProgressIndicator.adaptive()),
-          error: (e, _) => _StatePage(
+          error: (e, _) => ContactStatePage(
             title: 'Contacts unavailable',
             message: 'Contacts could not be read. Check access and try again.',
             action: 'Try Again',
@@ -63,7 +62,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
   Widget _content(BuildContext context, ContactsState s) {
     final ctl = ref.read(contactsControllerProvider.notifier);
     if (s.status != 'authorized' && s.status != 'limited') {
-      return _StatePage(
+      return ContactStatePage(
         title: switch (s.status) {
           'notScanned' => 'Scan your library first',
           'scanning' => 'Scanning your library',
@@ -103,7 +102,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
       );
     }
     if (s.visibleGroups.isEmpty) {
-      return _StatePage(
+      return ContactStatePage(
         title: s.groups.isEmpty
             ? 'Everyone in their place.'
             : 'No more groups to review.',
@@ -180,52 +179,4 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
       ],
     );
   }
-}
-
-class _StatePage extends StatelessWidget {
-  const _StatePage({
-    required this.title,
-    required this.message,
-    required this.action,
-    required this.onAction,
-    this.empty = false,
-  });
-  final String title, message, action;
-  final VoidCallback onAction;
-  final bool empty;
-  @override
-  Widget build(BuildContext context) => Center(
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.all(TidySpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            empty ? Icons.contacts_outlined : Icons.lock_outline,
-            size: 64,
-            color: TidyColors.emerald,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: TidyColors.secondaryText),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: 260,
-            child: TidyActionButton(label: action, onPressed: onAction),
-          ),
-        ],
-      ),
-    ),
-  );
 }

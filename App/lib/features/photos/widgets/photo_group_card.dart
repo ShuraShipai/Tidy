@@ -7,6 +7,7 @@ import '../../../core/design/tidy_spacing.dart';
 import '../../../core/widgets/tidy_clay_surface.dart';
 import '../models/photo_format.dart';
 import '../models/photo_group.dart';
+import 'photo_keeper_badge.dart';
 import 'photo_asset_thumbnail.dart';
 
 class PhotoGroupCard extends StatelessWidget {
@@ -61,7 +62,7 @@ class PhotoGroupCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _KeeperBadge(),
+              const PhotoKeeperBadge(),
             ],
           ),
           const SizedBox(height: TidySpacing.md),
@@ -141,25 +142,4 @@ class PhotoGroupCard extends StatelessWidget {
     }
     return '${group.items.length} photos · $size${date == null ? '' : ' · ${formatPhotoDate(date)}'}';
   }
-}
-
-class _KeeperBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: const Color(0xFFD7F1E6),
-      borderRadius: BorderRadius.circular(TidyRadii.button),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      child: Text(
-        '✓ Suggested to keep',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: const Color(0xFF14674A),
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    ),
-  );
 }

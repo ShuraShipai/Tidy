@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/design/tidy_colors.dart';
+import 'contact_match_evidence.dart';
 import '../../../core/design/tidy_radii.dart';
 import '../../../core/design/tidy_shadows.dart';
 import '../../../core/design/tidy_spacing.dart';
@@ -61,7 +62,9 @@ class ContactMatchCard extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [for (final item in evidence) _Evidence(label: item)],
+              children: [
+                for (final item in evidence) ContactMatchEvidence(label: item),
+              ],
             ),
             const SizedBox(height: 12),
             Row(
@@ -79,25 +82,6 @@ class ContactMatchCard extends StatelessWidget {
           ],
         ),
       ),
-    ),
-  );
-}
-
-class _Evidence extends StatelessWidget {
-  const _Evidence({required this.label});
-  final String label;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: TidyColors.orbGreenLight,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(
-      label,
-      style: Theme.of(
-        context,
-      ).textTheme.labelSmall?.copyWith(color: TidyColors.violetDeep),
     ),
   );
 }

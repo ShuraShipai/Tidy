@@ -6,6 +6,7 @@ import '../../../core/design/tidy_radii.dart';
 import '../../../core/widgets/tidy_glyph.dart';
 import '../../scan/models/scan_state.dart';
 import '../services/photo_library_service.dart';
+import 'photo_thumbnail_unavailable_placeholder.dart';
 
 class PhotoAssetThumbnail extends ConsumerWidget {
   const PhotoAssetThumbnail({
@@ -54,15 +55,16 @@ class PhotoAssetThumbnail extends ConsumerWidget {
                     onTap: onChooseKeeper ?? onPreview,
                     child: image.when(
                       data: (bytes) => bytes == null
-                          ? const _UnavailablePhoto()
+                          ? const PhotoThumbnailUnavailablePlaceholder()
                           : Image.memory(
                               bytes,
                               fit: BoxFit.cover,
                               filterQuality: FilterQuality.medium,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const _UnavailablePhoto(),
+                                  const PhotoThumbnailUnavailablePlaceholder(),
                             ),
-                      error: (error, stackTrace) => const _UnavailablePhoto(),
+                      error: (error, stackTrace) =>
+                          const PhotoThumbnailUnavailablePlaceholder(),
                       loading: () => const Center(
                         child: SizedBox.square(
                           dimension: 20,
@@ -165,17 +167,4 @@ class PhotoAssetThumbnail extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _UnavailablePhoto extends StatelessWidget {
-  const _UnavailablePhoto();
-
-  @override
-  Widget build(BuildContext context) => const Center(
-    child: TidyGlyph(
-      TidyGlyphName.photo,
-      size: 30,
-      color: TidyColors.violetDeep,
-    ),
-  );
 }

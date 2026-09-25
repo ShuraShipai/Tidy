@@ -13,6 +13,7 @@ import '../../repositories/photo_group_repository.dart';
 import '../../widgets/photo_asset_thumbnail.dart';
 import '../../widgets/photo_page_top_bar.dart';
 import '../../widgets/photo_viewer_image.dart';
+import '../../widgets/suggested_keeper_badge.dart';
 
 class PhotoComparisonPage extends ConsumerWidget {
   const PhotoComparisonPage({
@@ -97,7 +98,7 @@ class PhotoComparisonPage extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: TidySpacing.md),
-                          _SuggestedKeeperBadge(),
+                          const SuggestedKeeperBadge(),
                           const SizedBox(height: TidySpacing.sm),
                           Text(
                             'Highest available resolution in this set. You can choose a different keeper.',
@@ -212,27 +213,4 @@ class PhotoComparisonPage extends ConsumerWidget {
     }
     return '${first.day} ${monthNames[first.month - 1]} – ${last.day} ${monthNames[last.month - 1]}';
   }
-}
-
-class _SuggestedKeeperBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerLeft,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFD7F1E6),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Text(
-          '✓ Suggested to Keep',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: const Color(0xFF14674A),
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    ),
-  );
 }

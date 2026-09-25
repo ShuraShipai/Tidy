@@ -12,6 +12,7 @@ import '../../models/photo_format.dart';
 import '../../models/photo_group.dart';
 import '../../repositories/photo_group_repository.dart';
 import '../../widgets/photo_viewer_image.dart';
+import '../../widgets/photo_info_item.dart';
 
 class PhotoViewerPage extends ConsumerWidget {
   const PhotoViewerPage({
@@ -151,15 +152,15 @@ class PhotoViewerPage extends ConsumerWidget {
                   const SizedBox(height: TidySpacing.md),
                   Row(
                     children: [
-                      _PhotoInfo(
+                      PhotoInfoItem(
                         label: 'Date',
                         value: formatPhotoDate(photo.createdAt),
                       ),
-                      _PhotoInfo(
+                      PhotoInfoItem(
                         label: 'Resolution',
                         value: '${photo.width} × ${photo.height}',
                       ),
-                      _PhotoInfo(
+                      PhotoInfoItem(
                         label: 'File size',
                         value: photo.bytes == null
                             ? 'Unavailable'
@@ -260,35 +261,4 @@ class PhotoViewerPage extends ConsumerWidget {
     'blurry' => '/photos/blurry',
     _ => '/photos/similar',
   };
-}
-
-class _PhotoInfo extends StatelessWidget {
-  const _PhotoInfo({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: Colors.white70),
-        ),
-        const SizedBox(height: TidySpacing.xs),
-        Text(
-          value,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: Colors.white),
-        ),
-      ],
-    ),
-  );
 }

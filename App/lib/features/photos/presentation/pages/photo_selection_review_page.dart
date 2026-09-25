@@ -15,6 +15,8 @@ import '../../services/photo_library_service.dart';
 import '../../widgets/photo_page_top_bar.dart';
 import '../../widgets/photo_delete_confirmation_sheet.dart';
 import '../../widgets/photo_review_row.dart';
+import '../../widgets/photo_no_selection_state.dart';
+import '../../widgets/photo_review_unavailable_state.dart';
 
 class PhotoSelectionReviewPage extends ConsumerStatefulWidget {
   const PhotoSelectionReviewPage({super.key});
@@ -53,9 +55,9 @@ class _PhotoSelectionReviewPageState
               ),
               Expanded(
                 child: !authorized || !scan.hasResults
-                    ? const _ReviewUnavailable()
+                    ? const PhotoReviewUnavailableState()
                     : !hasItems
-                    ? const _NoSelection()
+                    ? const PhotoNoSelectionState()
                     : CustomScrollView(
                         slivers: [
                           SliverPadding(
@@ -215,35 +217,4 @@ class _PhotoSelectionReviewPageState
       if (mounted) setState(() => _processing = false);
     }
   }
-}
-
-class _NoSelection extends StatelessWidget {
-  const _NoSelection();
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(TidySpacing.lg),
-      child: Text(
-        'No photos are selected. Your library has not changed.',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-    ),
-  );
-}
-
-class _ReviewUnavailable extends StatelessWidget {
-  const _ReviewUnavailable();
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(TidySpacing.lg),
-      child: Text(
-        'The photo library changed or access is unavailable. Return to Photos and review the current library before continuing.',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-    ),
-  );
 }
