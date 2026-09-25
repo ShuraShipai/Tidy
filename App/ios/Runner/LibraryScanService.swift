@@ -305,26 +305,22 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
     if let date = asset.creationDate { item["createdAt"] = date.timeIntervalSince1970 * 1000 }
     if let date = asset.modificationDate { item["modifiedAt"] = date.timeIntervalSince1970 * 1000 }
     let shouldAnalyze = asset.mediaType == .image && !asset.mediaSubtypes.contains(.photoScreenshot)
-    let summary: (Int64, String?)?
+    let summary: (Int64, String)?
     let print: VNFeaturePrintObservation?
     let blur: Double?
     if shouldAnalyze {
       let value = feature(asset, version: version, profile: profile) {
-        self.resourceSummary(asset, version: version, hashContent: true, profile: profile)
+        self.resourceSummary(asset, version: version)
       }
       summary = value.0; print = value.1; blur = value.2
       item["analysisAvailable"] = print != nil && asset.creationDate != nil
     } else {
       let started = ProcessInfo.processInfo.systemUptime
-      summary = resourceSummary(
-        asset, version: version, hashContent: asset.mediaType == .image, profile: profile)
+      summary = resourceSummary(asset, version: version)
       profile.resourceSeconds += ProcessInfo.processInfo.systemUptime - started
       print = nil; blur = nil
     }
-    if let summary = summary {
-      item["bytes"] = summary.0
-      if let hash = summary.1 { item["contentHash"] = hash }
-    }
+    if let summary = summary { item["bytes"] = summary.0; item["contentHash"] = summary.1 }
     if let blur = blur {
       item["blurScore"] = blur
       item["possiblyBlurry"] = blur < PhotoBlurDetector.possibleBlurThreshold
@@ -577,9 +573,7 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
     publish(restoredSnapshot, version: version)
     scheduleReconcile()
   }
-  private func resourceSummary(
-    _ asset: PHAsset, version: Int, hashContent: Bool, profile: ScanProfile
-  ) -> (Int64, String?)? {
+  private func resourceSummary(_ asset: PHAsset, version: Int) -> (Int64, String)? {
     let resources = PHAssetResource.assetResources(for: asset)
     let preferred: [PHAssetResourceType] = asset.mediaType == .video
       ? [.video, .fullSizeVideo]
@@ -592,7 +586,6 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
       guard valid(version) else { return nil }
       let signal = DispatchSemaphore(value: 0)
       let response = ResourceRead()
-      profile.resourceReads += 1
       let options = PHAssetResourceRequestOptions()
       options.isNetworkAccessAllowed = false
       let request = PHAssetResourceManager.default().requestData(
@@ -601,7 +594,7 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
         dataReceivedHandler: { data in
           response.lock.lock()
           response.size += Int64(data.count)
-          if hashContent { response.hasher.update(data: data) }
+          response.hasher.update(data: data)
           response.lock.unlock()
         },
         completionHandler: { error in
@@ -617,7 +610,6 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
       lock.unlock()
       if stopNow { PHAssetResourceManager.default().cancelDataRequest(request) }
       if signal.wait(timeout: .now() + 30) == .timedOut {
-        profile.resourceTimeouts += 1
         PHAssetResourceManager.default().cancelDataRequest(request)
         lock.lock()
         resourceRequest = nil
@@ -631,11 +623,8 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
       let failed = response.failed
       let size = response.size
       response.lock.unlock()
-      profile.resourceBytes += size
       guard !failed, valid(version) else { return nil }
-      let digest = hashContent
-        ? response.hasher.finalize().map { String(format: "%02x", $0) }.joined()
-        : nil
+      let digest = response.hasher.finalize().map { String(format: "%02x", $0) }.joined()
       return (size, digest)
     }
     return nil
@@ -644,8 +633,8 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
     _ asset: PHAsset,
     version: Int,
     profile: ScanProfile,
-    measureResource: () -> (Int64, String?)?
-  ) -> ((Int64, String?)?, VNFeaturePrintObservation?, Double?) {
+    measureResource: () -> (Int64, String)?
+  ) -> ((Int64, String)?, VNFeaturePrintObservation?, Double?) {
     let options = PHImageRequestOptions()
     options.isNetworkAccessAllowed = false; options.deliveryMode = .highQualityFormat
     options.resizeMode = .fast
@@ -670,9 +659,7 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
     if !finished { PHImageManager.default().cancelImageRequest(request) }
     response.lock.lock(); let captured = response.image; response.lock.unlock()
     guard finished, valid(version), let cg = captured?.cgImage else { return (summary, nil, nil) }
-    let blurStarted = ProcessInfo.processInfo.systemUptime
     let blurScore = PhotoBlurDetector.score(cg)
-    profile.blurSeconds += ProcessInfo.processInfo.systemUptime - blurStarted
     let analysis = VNGenerateImageFeaturePrintRequest()
     analysis.revision = VNGenerateImageFeaturePrintRequestRevision2
     let visionStarted = ProcessInfo.processInfo.systemUptime
@@ -749,27 +736,26 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
           if let date = asset.creationDate { item["createdAt"] = date.timeIntervalSince1970 * 1000 }
           if let date = asset.modificationDate { item["modifiedAt"] = date.timeIntervalSince1970 * 1000 }
           let shouldAnalyze = asset.mediaType == .image && !asset.mediaSubtypes.contains(.photoScreenshot)
-          let summary: (Int64, String?)?
+          let summary: (Int64, String)?
           let featurePrint: VNFeaturePrintObservation?
           let blurScore: Double?
           if shouldAnalyze {
             let result = self.feature(asset, version: version, profile: profile) {
-              self.resourceSummary(asset, version: version, hashContent: true, profile: profile)
+              self.resourceSummary(asset, version: version)
             }
             summary = result.0
             featurePrint = result.1
             blurScore = result.2
           } else {
             let resourceStarted = ProcessInfo.processInfo.systemUptime
-            summary = self.resourceSummary(
-              asset, version: version, hashContent: asset.mediaType == .image, profile: profile)
+            summary = self.resourceSummary(asset, version: version)
             profile.resourceSeconds += ProcessInfo.processInfo.systemUptime - resourceStarted
             featurePrint = nil
             blurScore = nil
           }
           if let summary = summary {
             item["bytes"] = summary.0
-            if let hash = summary.1 { item["contentHash"] = hash }
+            item["contentHash"] = summary.1
           }
           if let blurScore = blurScore {
             item["blurScore"] = blurScore
@@ -838,7 +824,7 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
       saveCompleted(base, photoSignature: signature, attemptID: attemptID)
     }
     let totalSeconds = ProcessInfo.processInfo.systemUptime - scanStarted
-    Self.logger.info("scan_profile total_ms=\(Int(totalSeconds * 1000)) storage_ms=\(Int(profile.storageSeconds * 1000)) photos_ms=\(Int(photoSeconds * 1000)) resource_read_ms=\(Int(profile.resourceSeconds * 1000)) resource_reads=\(profile.resourceReads) resource_bytes=\(profile.resourceBytes) resource_timeouts=\(profile.resourceTimeouts) thumbnail_wait_ms=\(Int(profile.imageWaitSeconds * 1000)) vision_ms=\(Int(profile.visionSeconds * 1000)) blur_ms=\(Int(profile.blurSeconds * 1000)) matching_ms=\(Int(matchingSeconds * 1000)) contacts_ms=\(Int(contactSeconds * 1000)) assets=\(media.count) analyzed_images=\(analyzedImages) feature_comparisons=\(comparisons) contacts=\(contactCount) matches=\(pairs.count + contactMatches.filter { $0.value.count > 1 }.count) unavailable_images=\(unavailableImages)")
+    Self.logger.info("scan_profile total_ms=\(Int(totalSeconds * 1000)) storage_ms=\(Int(profile.storageSeconds * 1000)) photos_ms=\(Int(photoSeconds * 1000)) resource_read_ms=\(Int(profile.resourceSeconds * 1000)) thumbnail_wait_ms=\(Int(profile.imageWaitSeconds * 1000)) vision_ms=\(Int(profile.visionSeconds * 1000)) matching_ms=\(Int(matchingSeconds * 1000)) contacts_ms=\(Int(contactSeconds * 1000)) assets=\(media.count) analyzed_images=\(analyzedImages) feature_comparisons=\(comparisons) contacts=\(contactCount) matches=\(pairs.count + contactMatches.filter { $0.value.count > 1 }.count) unavailable_images=\(unavailableImages)")
   }
 }
 
@@ -847,10 +833,6 @@ private final class ScanProfile {
   var resourceSeconds = 0.0
   var imageWaitSeconds = 0.0
   var visionSeconds = 0.0
-  var blurSeconds = 0.0
-  var resourceReads = 0
-  var resourceBytes: Int64 = 0
-  var resourceTimeouts = 0
 }
 
 private final class ResourceRead {
