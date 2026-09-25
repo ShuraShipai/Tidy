@@ -186,10 +186,6 @@ class _PrivateVaultPageState extends ConsumerState<PrivateVaultPage> {
               : 'Set Up Vault',
           onPressed: _busy || !_setupChecked ? null : _unlock,
         ),
-        TextButton(
-          onPressed: () => context.pop(),
-          child: const Text('Not Now'),
-        ),
       ],
     ),
     child: Column(

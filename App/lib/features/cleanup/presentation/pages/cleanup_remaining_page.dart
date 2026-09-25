@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
+import '../../../../core/widgets/tidy_back_button.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
 import '../../controllers/cleanup_controller.dart';
 import '../../models/cleanup_plan.dart';
@@ -25,9 +26,9 @@ class CleanupRemainingPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(TidySpacing.lg),
                 child: Row(
                   children: [
-                    IconButton(
+                    TidyBackButton(
                       onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back),
+                      tooltip: 'Back',
                     ),
                     Text(
                       'Remaining Items',

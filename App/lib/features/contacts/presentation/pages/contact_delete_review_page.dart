@@ -85,10 +85,6 @@ class _ContactDeleteReviewPageState
                         '${chosen.length} selected',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      Text(
-                        '0 MB',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
                     ],
                   ),
                   const SizedBox(height: 8),

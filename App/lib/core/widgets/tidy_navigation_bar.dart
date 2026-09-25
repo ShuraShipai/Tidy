@@ -15,6 +15,7 @@ class TidyNavigationBar extends StatelessWidget {
     return NavigationBar(
       selectedIndex: currentIndex,
       onDestinationSelected: onDestinationSelected,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
       destinations: const <NavigationDestination>[
         NavigationDestination(
           icon: Icon(Icons.home_outlined),

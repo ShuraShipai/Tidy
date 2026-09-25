@@ -48,7 +48,6 @@ class _WidgetSetupPageState extends ConsumerState<WidgetSetupPage> {
               label: _busy ? 'Updating…' : 'Update Widget Summary',
               onPressed: _busy ? null : () => _publish(summary),
             ),
-          TextButton(onPressed: () => context.pop(), child: const Text('Done')),
         ],
       ),
       child: Column(

@@ -55,14 +55,6 @@ class _VideosPageState extends ConsumerState<VideosPage> {
                       ),
                       sliver: SliverList.list(
                         children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              onPressed: () => context.go('/home'),
-                              icon: const Icon(Icons.chevron_left),
-                              label: const Text('Back'),
-                            ),
-                          ),
                           Text(
                             'Large Videos',
                             style: Theme.of(context).textTheme.headlineLarge,

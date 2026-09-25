@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/design/tidy_colors.dart';
-import '../../../core/design/tidy_sizes.dart';
+import '../../../core/widgets/tidy_back_button.dart';
 
 class SettingsPageTopBar extends StatelessWidget {
   const SettingsPageTopBar({required this.backLabel, super.key});
@@ -14,7 +14,7 @@ class SettingsPageTopBar extends StatelessWidget {
     height: 44,
     child: Align(
       alignment: Alignment.centerLeft,
-      child: TextButton.icon(
+      child: TidyBackButton(
         onPressed: () {
           if (context.canPop()) {
             context.pop();
@@ -22,13 +22,8 @@ class SettingsPageTopBar extends StatelessWidget {
             context.go('/settings');
           }
         },
-        icon: const Icon(Icons.chevron_left, size: TidySizes.backIcon),
-        label: Text(backLabel),
-        style: TextButton.styleFrom(
-          foregroundColor: TidyColors.primary,
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(44, 44),
-        ),
+        tooltip: backLabel == 'Back' ? 'Back' : 'Back to $backLabel',
+        color: TidyColors.primary,
       ),
     ),
   );

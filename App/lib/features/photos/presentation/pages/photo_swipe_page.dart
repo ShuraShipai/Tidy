@@ -92,17 +92,14 @@ class _PhotoSwipePageState extends ConsumerState<PhotoSwipePage> {
                   ),
                 ),
                 const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.all(TidySpacing.lg),
-                  child: TidyActionButton(
-                    label: totals.count == 0
-                        ? 'Back to Photos'
-                        : 'Review Selection',
-                    onPressed: totals.count == 0
-                        ? () => context.pop()
-                        : () => context.push('/photos/review'),
+                if (totals.count > 0)
+                  Padding(
+                    padding: const EdgeInsets.all(TidySpacing.lg),
+                    child: TidyActionButton(
+                      label: 'Review Selection',
+                      onPressed: () => context.push('/photos/review'),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

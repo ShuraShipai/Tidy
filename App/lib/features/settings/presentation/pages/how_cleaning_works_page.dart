@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../../core/widgets/tidy_safety_note.dart';
-import '../../widgets/settings_done_button.dart';
 import '../../widgets/settings_info_card.dart';
 import '../../widgets/settings_page_top_bar.dart';
 
@@ -66,9 +65,6 @@ class HowCleaningWorksPage extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-            SettingsDoneButton(
-              onPressed: () => Navigator.of(context).maybePop(),
             ),
           ],
         ),

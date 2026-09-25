@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
+import '../../../../core/widgets/tidy_back_button.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
 import '../../controllers/scan_controller.dart';
 import '../../widgets/scan_interrupted_recovery.dart';
@@ -21,9 +22,9 @@ class ScanInterruptedPage extends ConsumerWidget {
             children: [
               Align(
                 alignment: Alignment.centerLeft,
-                child: IconButton(
+                child: TidyBackButton(
                   onPressed: () => context.pop(),
-                  icon: const Icon(Icons.chevron_left),
+                  tooltip: 'Back',
                 ),
               ),
               const Expanded(child: ScanInterruptedRecovery()),

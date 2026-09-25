@@ -186,7 +186,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Set Up Vault'), findsOneWidget);
       expect(service.vaultAuthenticationCount, 0);
-      await tester.tap(find.text('Not Now'));
+      await tester.tap(find.byTooltip('Back to Optional Features'));
       await tester.pumpAndSettle();
       expect(find.text('Optional Features'), findsOneWidget);
 
@@ -195,7 +195,7 @@ void main() {
       expect(find.text('A lighter calendar.'), findsOneWidget);
       expect(service.calendarStatusCount, 1);
       expect(service.calendarRequestCount, 0);
-      await tester.tap(find.text('Optional Features').first);
+      await tester.tap(find.byTooltip('Back to Optional Features'));
       await tester.pumpAndSettle();
       expect(find.text('Optional Features'), findsOneWidget);
       expect(service.calendarRequestCount, 0);

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
+import '../../../../core/widgets/tidy_back_button.dart';
 import '../../../scan/controllers/scan_controller.dart';
 import '../../controllers/videos_controller.dart';
 import '../../models/video_record.dart';
@@ -230,10 +231,10 @@ class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
     padding: const EdgeInsets.symmetric(horizontal: TidySpacing.sm),
     child: Row(
       children: [
-        TextButton.icon(
+        TidyBackButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.chevron_left, color: Colors.white),
-          label: const Text('Back', style: TextStyle(color: Colors.white)),
+          tooltip: 'Back to videos',
+          color: Colors.white,
         ),
       ],
     ),

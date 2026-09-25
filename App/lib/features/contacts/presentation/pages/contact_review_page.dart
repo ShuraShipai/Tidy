@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design/tidy_colors.dart';
@@ -68,7 +69,7 @@ class ContactReviewPage extends ConsumerWidget {
             TidyActionButton(
               label: 'Preview Merged Contact',
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
+                CupertinoPageRoute<void>(
                   builder: (_) => MergedContactPreviewPage(group: group),
                 ),
               ),
@@ -85,7 +86,7 @@ class ContactReviewPage extends ConsumerWidget {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
+                CupertinoPageRoute<void>(
                   builder: (_) =>
                       ContactDeleteReviewPage(initialContactId: b.id),
                 ),

@@ -235,10 +235,6 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
         ? 'Allow full Calendar access in Settings to review event occurrences.'
         : 'Allow Calendar access to review old or repeated events. Access is requested only when you choose to continue.',
     backLabel: 'Optional Features',
-    footer: TextButton(
-      onPressed: () => Navigator.of(context).maybePop(),
-      child: const Text('Not Now'),
-    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -285,13 +281,6 @@ class _CalendarCleanupPageState extends ConsumerState<CalendarCleanupPage>
           label: 'Continue to Confirmation',
           onPressed: _busy ? null : _confirmDelete,
           style: TidyActionStyle.destructive,
-        ),
-        TextButton(
-          onPressed: () => setState(() {
-            _review = false;
-            _reviewed = [];
-          }),
-          child: const Text('Cancel'),
         ),
       ],
     ),

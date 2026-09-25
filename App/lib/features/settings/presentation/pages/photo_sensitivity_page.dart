@@ -7,7 +7,6 @@ import '../../../../core/widgets/tidy_safety_note.dart';
 import '../../controllers/settings_controller.dart';
 import '../../models/scan_preferences.dart';
 import '../../widgets/sensitivity_option_card.dart';
-import '../../widgets/settings_done_button.dart';
 import '../../widgets/settings_page_top_bar.dart';
 
 class PhotoSensitivityPage extends ConsumerWidget {
@@ -72,9 +71,6 @@ class PhotoSensitivityPage extends ConsumerWidget {
                             ),
                         ],
                       ),
-              ),
-              SettingsDoneButton(
-                onPressed: () => Navigator.of(context).maybePop(),
               ),
             ],
           ),

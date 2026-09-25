@@ -85,13 +85,6 @@ class PhotoCollectionState extends StatelessWidget {
           ),
           const SizedBox(height: TidySpacing.xl),
           TidyActionButton(label: action, onPressed: actionCallback),
-          if (scan.phase == ScanPhase.error) ...[
-            const SizedBox(height: TidySpacing.xs),
-            TextButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Back to Home'),
-            ),
-          ],
         ],
       ),
     );

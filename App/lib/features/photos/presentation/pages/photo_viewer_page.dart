@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
+import '../../../../core/widgets/tidy_back_button.dart';
 import '../../../../core/widgets/tidy_glyph.dart';
 import '../../../scan/controllers/scan_controller.dart';
 import '../../../scan/models/scan_state.dart';
@@ -56,21 +57,10 @@ class PhotoViewerPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: TidySpacing.md),
               child: Row(
                 children: [
-                  TextButton.icon(
+                  TidyBackButton(
                     onPressed: () => _goBack(context),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(44, 44),
-                    ),
-                    icon: const Icon(Icons.chevron_left),
-                    label: const Text('Back'),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => _goBack(context),
-                    tooltip: 'Close preview',
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    tooltip: 'Back to photos',
+                    color: Colors.white,
                   ),
                 ],
               ),
@@ -133,12 +123,6 @@ class PhotoViewerPage extends ConsumerWidget {
                         icon: const Icon(Icons.chevron_right),
                       ),
                     ],
-                  ),
-                  Text(
-                    'Photo',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.headlineLarge?.copyWith(color: Colors.white),
                   ),
                   if (group != null) ...[
                     const SizedBox(height: TidySpacing.xs),
@@ -211,11 +195,10 @@ class PhotoViewerPage extends ConsumerWidget {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton.icon(
+            child: TidyBackButton(
               onPressed: () => _goBack(context),
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-              icon: const Icon(Icons.chevron_left),
-              label: const Text('Back'),
+              tooltip: 'Back to photos',
+              color: Colors.white,
             ),
           ),
           const Expanded(

@@ -41,8 +41,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Photos'), findsOneWidget);
-    await tester.tap(find.text('Photos').first);
+    await tester.tap(find.byTooltip('Back to Photos'));
     await tester.pumpAndSettle();
 
     expect(find.text('A place for the moments worth keeping.'), findsOneWidget);

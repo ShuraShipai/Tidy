@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
+import '../../../../core/widgets/tidy_back_button.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../scan/controllers/scan_controller.dart';
 import '../../controllers/cleanup_controller.dart';
@@ -35,11 +36,10 @@ class CleanupReviewPage extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    IconButton(
+                    TidyBackButton(
                       onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back),
+                      tooltip: 'Back',
                     ),
-                    const SizedBox(width: TidySpacing.xs),
                     Expanded(
                       child: Text(
                         'Review Cleanup',

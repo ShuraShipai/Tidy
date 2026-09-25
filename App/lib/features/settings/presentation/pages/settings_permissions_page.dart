@@ -11,7 +11,6 @@ import '../../models/permission_status_label.dart';
 import '../../widgets/settings_page_top_bar.dart';
 import '../../widgets/settings_permission_card.dart';
 import '../../widgets/settings_access_refresh_note.dart';
-import '../../widgets/settings_done_button.dart';
 
 class SettingsPermissionsPage extends ConsumerWidget {
   const SettingsPermissionsPage({super.key});
@@ -69,9 +68,6 @@ class SettingsPermissionsPage extends ConsumerWidget {
                         ],
                       )
                     : const Center(child: CircularProgressIndicator.adaptive()),
-              ),
-              SettingsDoneButton(
-                onPressed: () => Navigator.of(context).maybePop(),
               ),
             ],
           ),

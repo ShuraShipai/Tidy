@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
-import '../../../../core/widgets/tidy_action_button.dart';
 import '../../../../core/widgets/tidy_orb.dart';
 import '../../../../core/widgets/tidy_glyph.dart';
 import '../controllers/scan_controller.dart';
@@ -51,12 +49,6 @@ class ScanInterruptedRecovery extends ConsumerWidget {
                       const SizedBox(height: TidySpacing.xs),
                       Text(
                         '$mediaCount reviewable media items · $contactGroups contact match groups.',
-                      ),
-                      const SizedBox(height: TidySpacing.xs),
-                      TidyActionButton(
-                        label: 'Review Last Scan',
-                        style: TidyActionStyle.quiet,
-                        onPressed: () => context.go('/home'),
                       ),
                     ],
                   ),

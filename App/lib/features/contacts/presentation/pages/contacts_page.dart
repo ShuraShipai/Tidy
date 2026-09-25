@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -121,10 +122,8 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               ContactPageHeading(
-                backLabel: 'Back',
                 title: 'Duplicate Contacts',
                 subtitle: '${s.visibleGroups.length} possible duplicate groups',
-                onBack: () => context.go('/home'),
               ),
               const SizedBox(height: 20),
               Text(
@@ -141,7 +140,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
                     second: s.byId(g.second)!,
                     evidence: g.evidence,
                     onReview: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
+                      CupertinoPageRoute<void>(
                         builder: (_) => ContactReviewPage(group: g),
                       ),
                     ),

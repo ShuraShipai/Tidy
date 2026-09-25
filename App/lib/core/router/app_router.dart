@@ -88,48 +88,80 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/scan/interrupted',
-        builder: (context, state) => const ScanInterruptedPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const ScanInterruptedPage(),
+        ),
       ),
       GoRoute(
         path: '/cleanup/review',
-        builder: (context, state) => const CleanupReviewPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const CleanupReviewPage(),
+        ),
       ),
       GoRoute(
         path: '/cleanup/progress',
-        builder: (context, state) =>
-            CleanupProgressPage(reviewedPlan: state.extra as CleanupPlan?),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: CleanupProgressPage(reviewedPlan: state.extra as CleanupPlan?),
+        ),
       ),
       GoRoute(
         path: '/cleanup/result',
-        builder: (context, state) => const CleanupResultPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const CleanupResultPage(),
+        ),
       ),
       GoRoute(
         path: '/cleanup/remaining',
-        builder: (context, state) => const CleanupRemainingPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const CleanupRemainingPage(),
+        ),
       ),
       GoRoute(
         path: '/settings/permissions',
-        builder: (context, state) => const SettingsPermissionsPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const SettingsPermissionsPage(),
+        ),
       ),
       GoRoute(
         path: '/settings/preferences',
-        builder: (context, state) => const ScanPreferencesPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const ScanPreferencesPage(),
+        ),
       ),
       GoRoute(
         path: '/settings/sensitivity',
-        builder: (context, state) => const PhotoSensitivityPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PhotoSensitivityPage(),
+        ),
       ),
       GoRoute(
         path: '/settings/privacy',
-        builder: (context, state) => const PrivacyInformationPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const PrivacyInformationPage(),
+        ),
       ),
       GoRoute(
         path: '/settings/how',
-        builder: (context, state) => const HowCleaningWorksPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const HowCleaningWorksPage(),
+        ),
       ),
       GoRoute(
         path: '/settings/about',
-        builder: (context, state) => const AboutTidyPage(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const AboutTidyPage(),
+        ),
       ),
       GoRoute(
         path: '/videos/viewer',

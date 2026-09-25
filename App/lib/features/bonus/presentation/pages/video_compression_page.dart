@@ -421,15 +421,11 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         const SizedBox(height: TidySpacing.lg),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(TidySpacing.md),
-            child: Text(
-              _saved
-                  ? 'The compressed copy is saved in Photos. The original is still there.'
-                  : 'Your original is still here. Keep both copies, or review removal of the original. Nothing is replaced automatically.',
-            ),
-          ),
+        Text(
+          _saved
+              ? 'The compressed copy is saved in Photos. The original is still there.'
+              : 'Your original is still here. Keep both copies, or review removal of the original. Nothing is replaced automatically.',
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         if (_error != null) ...[
           const SizedBox(height: TidySpacing.sm),
@@ -455,16 +451,6 @@ class _VideoCompressionPageState extends ConsumerState<VideoCompressionPage> {
           TidyActionButton(
             label: lowSpace ? 'Review Storage' : 'Try Again',
             onPressed: lowSpace ? null : _compress,
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _error = null;
-                _errorCode = null;
-              });
-              context.pop();
-            },
-            child: const Text('Cancel'),
           ),
         ],
       ),
@@ -540,9 +526,6 @@ class _QualityOption extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       elevation: selected ? 0 : null,
       child: ListTile(
-        shape: selected
-            ? RoundedRectangleBorder(borderRadius: selectedShape.borderRadius)
-            : null,
         onTap: onTap,
         title: Text(labels.$1),
         subtitle: Text(labels.$2),

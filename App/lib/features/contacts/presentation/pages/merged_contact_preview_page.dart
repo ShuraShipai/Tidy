@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design/tidy_colors.dart';
@@ -131,7 +132,7 @@ class _MergedContactPreviewPageState
               onPressed: busy
                   ? null
                   : () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
+                      CupertinoPageRoute<void>(
                         builder: (_) =>
                             ContactDeleteReviewPage(initialContactId: other.id),
                       ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tidy/app.dart';
@@ -77,6 +77,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ready when you are'), findsOneWidget);
+    final homeLabelFade = tester.widget<FadeTransition>(
+      find
+          .ancestor(
+            of: find.text('Home'),
+            matching: find.byType(FadeTransition),
+          )
+          .first,
+    );
+    expect(homeLabelFade.opacity.value, 0);
+    expect(homeLabelFade.alwaysIncludeSemantics, isTrue);
+    final navigationBar = tester.widget<NavigationBar>(
+      find.byType(NavigationBar),
+    );
+    expect(
+      navigationBar.destinations.cast<NavigationDestination>().map(
+        (destination) => destination.label,
+      ),
+      ['Home', 'Photos', 'Videos', 'Contacts', 'Settings'],
+    );
+    expect(
+      navigationBar.labelBehavior,
+      NavigationDestinationLabelBehavior.alwaysHide,
+    );
+    expect(
+      tester.getSize(find.byType(NavigationBar)).height,
+      greaterThanOrEqualTo(44),
+    );
+    await tester.tap(find.byIcon(Icons.photo_outlined).first);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+    expect(find.byIcon(Icons.photo_rounded), findsOneWidget);
+    router.go('/home');
+    await tester.pumpAndSettle();
     expect(find.text('Not scanned'), findsNWidgets(4));
     expect(find.textContaining('GB used'), findsNothing);
 

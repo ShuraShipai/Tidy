@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
+import '../../../../core/widgets/tidy_back_button.dart';
 
 class BonusPageFrame extends StatelessWidget {
   const BonusPageFrame({
@@ -35,10 +36,9 @@ class BonusPageFrame extends StatelessWidget {
             if (backLabel != null)
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton.icon(
+                child: TidyBackButton(
                   onPressed: onBack ?? context.pop,
-                  icon: const Icon(Icons.chevron_left),
-                  label: Text(backLabel!),
+                  tooltip: backLabel == 'Back' ? 'Back' : 'Back to $backLabel',
                 ),
               ),
             Expanded(child: _scrollContent(context)),

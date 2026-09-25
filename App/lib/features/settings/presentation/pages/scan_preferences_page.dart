@@ -5,7 +5,6 @@ import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../../core/widgets/tidy_safety_note.dart';
 import '../../controllers/settings_controller.dart';
-import '../../widgets/settings_done_button.dart';
 import '../../widgets/settings_page_top_bar.dart';
 
 class ScanPreferencesPage extends ConsumerWidget {
@@ -95,9 +94,6 @@ class ScanPreferencesPage extends ConsumerWidget {
                             ),
                         ],
                       ),
-              ),
-              SettingsDoneButton(
-                onPressed: () => Navigator.of(context).maybePop(),
               ),
             ],
           ),

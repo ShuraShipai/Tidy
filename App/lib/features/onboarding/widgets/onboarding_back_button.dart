@@ -1,10 +1,7 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Theme;
+import 'package:flutter/material.dart';
 
 import '../../../core/design/tidy_colors.dart';
-import '../../../core/design/tidy_sizes.dart';
-import '../../../core/design/tidy_spacing.dart';
-import '../../../core/widgets/tidy_glyph.dart';
+import '../../../core/widgets/tidy_back_button.dart';
 
 class OnboardingBackButton extends StatelessWidget {
   const OnboardingBackButton({required this.onPressed, super.key});
@@ -12,26 +9,9 @@ class OnboardingBackButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => CupertinoButton(
-    padding: const EdgeInsets.only(left: TidySpacing.md),
-    minimumSize: const Size(TidySizes.touchTarget, TidySizes.touchTarget),
+  Widget build(BuildContext context) => TidyBackButton(
     onPressed: onPressed,
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        const TidyGlyph(
-          TidyGlyphName.back,
-          size: TidySizes.backIcon,
-          color: TidyColors.primary,
-        ),
-        Text(
-          'Back',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontSize: TidySizes.actionText,
-            color: TidyColors.primary,
-          ),
-        ),
-      ],
-    ),
+    tooltip: 'Back',
+    color: TidyColors.primary,
   );
 }

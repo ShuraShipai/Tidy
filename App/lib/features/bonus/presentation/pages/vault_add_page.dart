@@ -65,15 +65,15 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
         scan.hasResults && const ['authorized', 'limited'].contains(permission)
         ? _newestFirst(
             scan.media.where(
-              (record) =>
-                  !record.video && !_vaultedSources.contains(record.id),
+              (record) => !record.video && !_vaultedSources.contains(record.id),
             ),
           )
         : const <MediaRecord>[];
     if (photos.isEmpty) return _empty(scan, permission);
     return BonusPageFrame(
       title: 'Choose private items',
-      subtitle: 'Items are encrypted in Vault before originals are removed.',
+      subtitle:
+          'Choose items to copy into Vault. Removing Photos originals is a separate confirmed step.',
       backLabel: 'Vault',
       slivers: [
         if (permission == 'limited')
@@ -193,10 +193,6 @@ class _VaultAddPageState extends ConsumerState<VaultAddPage> {
               label: hasResults ? 'Refresh Library Scan' : 'Scan Library',
               onPressed: () => context.push('/scan?start=true'),
             ),
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Cancel'),
-          ),
         ],
       ),
       child: Column(
