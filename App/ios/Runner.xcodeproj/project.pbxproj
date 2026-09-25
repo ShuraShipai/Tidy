@@ -7,13 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-        A20300000000000000000001 /* PhotoBlurDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20300000000000000000002; };
-        B50500000000000000000001 /* ContactsNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50500000000000000000002; };
-        A20200000000000000000001 /* PhotoLibraryNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20200000000000000000002; };
-        A40400000000000000000001 /* VideoLibraryNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40400000000000000000002; };
-        A11111111111111111111111 /* LibraryScanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11111111111111111111112; };
-        A11111111111111111111113 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11111111111111111111114; };
-		A10100000000000000000001 /* OnboardingNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000002 /* OnboardingNativeService.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -23,6 +16,17 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A10100000000000000000001 /* OnboardingNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000002 /* OnboardingNativeService.swift */; };
+		A11111111111111111111111 /* LibraryScanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11111111111111111111112 /* LibraryScanService.swift */; };
+		A11111111111111111111113 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11111111111111111111114 /* PrivacyInfo.xcprivacy */; };
+		A20200000000000000000001 /* PhotoLibraryNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20200000000000000000002 /* PhotoLibraryNativeService.swift */; };
+		A20300000000000000000001 /* PhotoBlurDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20300000000000000000002 /* PhotoBlurDetector.swift */; };
+		A40400000000000000000001 /* VideoLibraryNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40400000000000000000002 /* VideoLibraryNativeService.swift */; };
+		A50600000000000000000001 /* SettingsNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50600000000000000000002 /* SettingsNativeService.swift */; };
+		B50500000000000000000001 /* ContactsNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50500000000000000000002 /* ContactsNativeService.swift */; };
+		C80800000000000000000001 /* TidyWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80800000000000000000002 /* TidyWidgets.swift */; };
+		C80800000000000000000004 /* TidyWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C80800000000000000000003 /* TidyWidgets.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C80900000000000000000001 /* GroupEightNativeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80900000000000000000002 /* GroupEightNativeService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +36,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		C80800000000000000000005 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C80800000000000000000011;
+			remoteInfo = TidyWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -46,16 +57,20 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C80800000000000000000016 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C80800000000000000000004 /* TidyWidgets.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-        A20300000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoBlurDetector.swift; sourceTree = "<group>"; };
-        B50500000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsNativeService.swift; sourceTree = "<group>"; };
-        A20200000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryNativeService.swift; sourceTree = "<group>"; };
-        A40400000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoLibraryNativeService.swift; sourceTree = "<group>"; };
-        A11111111111111111111112 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryScanService.swift; sourceTree = "<group>"; };
-        A11111111111111111111114 = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		A10100000000000000000002 /* OnboardingNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNativeService.swift; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -73,6 +88,19 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10100000000000000000002 /* OnboardingNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNativeService.swift; sourceTree = "<group>"; };
+		A11111111111111111111112 /* LibraryScanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryScanService.swift; sourceTree = "<group>"; };
+		A11111111111111111111114 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A20200000000000000000002 /* PhotoLibraryNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryNativeService.swift; sourceTree = "<group>"; };
+		A20300000000000000000002 /* PhotoBlurDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoBlurDetector.swift; sourceTree = "<group>"; };
+		A40400000000000000000002 /* VideoLibraryNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoLibraryNativeService.swift; sourceTree = "<group>"; };
+		A50600000000000000000002 /* SettingsNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNativeService.swift; sourceTree = "<group>"; };
+		B50500000000000000000002 /* ContactsNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsNativeService.swift; sourceTree = "<group>"; };
+		C80800000000000000000002 /* TidyWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TidyWidgets.swift; sourceTree = "<group>"; };
+		C80800000000000000000003 /* TidyWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TidyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C80800000000000000000017 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C80800000000000000000018 /* TidyWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TidyWidgets.entitlements; sourceTree = "<group>"; };
+		C80900000000000000000002 /* GroupEightNativeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEightNativeService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +109,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C80800000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +147,7 @@
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
+				C80800000000000000000007 /* TidyWidgets */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 			);
@@ -122,6 +158,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+				C80800000000000000000003 /* TidyWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,17 +173,29 @@
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
-                B50500000000000000000002,
-                A20200000000000000000002,
-                A20300000000000000000002,
-                A40400000000000000000002,
-                A11111111111111111111112,
-                A11111111111111111111114,
+				B50500000000000000000002 /* ContactsNativeService.swift */,
+				A20200000000000000000002 /* PhotoLibraryNativeService.swift */,
+				A20300000000000000000002 /* PhotoBlurDetector.swift */,
+				C80900000000000000000002 /* GroupEightNativeService.swift */,
+				A50600000000000000000002 /* SettingsNativeService.swift */,
+				A40400000000000000000002 /* VideoLibraryNativeService.swift */,
+				A11111111111111111111112 /* LibraryScanService.swift */,
+				A11111111111111111111114 /* PrivacyInfo.xcprivacy */,
 				A10100000000000000000002 /* OnboardingNativeService.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		C80800000000000000000007 /* TidyWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				C80800000000000000000002 /* TidyWidgets.swift */,
+				C80800000000000000000017 /* Info.plist */,
+				C80800000000000000000018 /* TidyWidgets.entitlements */,
+			);
+			path = TidyWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -178,11 +227,13 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				C80800000000000000000016 /* Embed App Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C80800000000000000000006 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -191,6 +242,23 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C80800000000000000000011 /* TidyWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C80800000000000000000015 /* Build configuration list for PBXNativeTarget "TidyWidgets" */;
+			buildPhases = (
+				C80800000000000000000008 /* Frameworks */,
+				C80800000000000000000009 /* Sources */,
+				C80800000000000000000010 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TidyWidgets;
+			productName = TidyWidgets;
+			productReference = C80800000000000000000003 /* TidyWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -209,6 +277,9 @@
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
+					};
+					C80800000000000000000011 = {
+						CreatedOnToolsVersion = 15.0;
 					};
 				};
 			};
@@ -230,6 +301,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				C80800000000000000000011 /* TidyWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -246,11 +318,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-                A11111111111111111111113,
+				A11111111111111111111113 /* PrivacyInfo.xcprivacy in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C80800000000000000000010 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,14 +383,24 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
-                B50500000000000000000001,
-                A20200000000000000000001,
-                A20300000000000000000001,
-                A40400000000000000000001,
-                A11111111111111111111111,
+				B50500000000000000000001 /* ContactsNativeService.swift in Sources */,
+				A20200000000000000000001 /* PhotoLibraryNativeService.swift in Sources */,
+				A20300000000000000000001 /* PhotoBlurDetector.swift in Sources */,
+				C80900000000000000000001 /* GroupEightNativeService.swift in Sources */,
+				A50600000000000000000001 /* SettingsNativeService.swift in Sources */,
+				A40400000000000000000001 /* VideoLibraryNativeService.swift in Sources */,
+				A11111111111111111111111 /* LibraryScanService.swift in Sources */,
 				A10100000000000000000001 /* OnboardingNativeService.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C80800000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C80800000000000000000001 /* TidyWidgets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,6 +411,11 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		C80800000000000000000006 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C80800000000000000000011 /* TidyWidgets */;
+			targetProxy = C80800000000000000000005 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -403,6 +497,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = QZYC84DJ6G;
 				ENABLE_BITCODE = NO;
@@ -583,6 +678,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = QZYC84DJ6G;
 				ENABLE_BITCODE = NO;
@@ -606,6 +702,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = QZYC84DJ6G;
 				ENABLE_BITCODE = NO;
@@ -621,6 +718,63 @@
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
+		};
+		C80800000000000000000012 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = TidyWidgets/TidyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TidyWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.tidy.TidyWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C80800000000000000000013 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = TidyWidgets/TidyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TidyWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.tidy.TidyWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C80800000000000000000014 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = TidyWidgets/TidyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TidyWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.tidy.TidyWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
 		};
 /* End XCBuildConfiguration section */
 
@@ -651,6 +805,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C80800000000000000000015 /* Build configuration list for PBXNativeTarget "TidyWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C80800000000000000000012 /* Debug */,
+				C80800000000000000000013 /* Release */,
+				C80800000000000000000014 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

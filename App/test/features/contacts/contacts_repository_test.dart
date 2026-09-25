@@ -69,4 +69,26 @@ void main() {
     expect(pairs.map((pair) => pair.key), ['a|b', 'b|c']);
     expect(pairs.any((pair) => pair.key.contains('d')), isFalse);
   });
+  test('one pair with two matching fields appears only once', () {
+    final records = [
+      contact(
+        'a',
+        'Rae Harper',
+        phones: ['1234567890'],
+        emails: ['rae@example.com'],
+      ),
+      contact(
+        'b',
+        'Rae H.',
+        phones: ['1234567890'],
+        emails: ['rae@example.com'],
+      ),
+    ];
+    final pairs = repository.reviewPairs(records, [
+      MatchGroup(['a', 'b'], 'Shared phone number'),
+      MatchGroup(['a', 'b'], 'Shared email address'),
+    ]);
+    expect(pairs, hasLength(1));
+    expect(pairs.single.evidence, ['Same email address', 'Same phone number']);
+  });
 }

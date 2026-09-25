@@ -6,9 +6,9 @@ import '../../../../core/design/tidy_colors.dart';
 import '../../../onboarding/services/onboarding_service.dart';
 import '../../controllers/contacts_controller.dart';
 import '../../widgets/contact_match_card.dart';
+import '../../widgets/contact_page_heading.dart';
 import '../../widgets/contact_state_page.dart';
 import 'contact_review_page.dart';
-import 'contact_delete_review_page.dart';
 
 class ContactsPage extends ConsumerStatefulWidget {
   const ContactsPage({super.key});
@@ -107,9 +107,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
             ? 'Everyone in their place.'
             : 'No more groups to review.',
         message: s.groups.isEmpty
-            ? s.contacts.isEmpty
-                  ? 'No contacts are available to review.'
-                  : 'No possible duplicate contacts found.'
+            ? 'No possible duplicate contacts found.'
             : 'Ignored groups remain separate. No contact changes were made.',
         action: s.groups.isEmpty ? 'Refresh Contacts' : 'Done',
         onAction: s.groups.isEmpty ? ctl.refresh : () => context.go('/home'),
@@ -122,27 +120,13 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => context.go('/home'),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Duplicate Contacts',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                  ),
-                ],
+              ContactPageHeading(
+                backLabel: 'Back',
+                title: 'Duplicate Contacts',
+                subtitle: '${s.visibleGroups.length} possible duplicate groups',
+                onBack: () => context.go('/home'),
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${s.visibleGroups.length} possible duplicate groups',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               Text(
                 'These contacts look similar. Review them before making changes.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -163,16 +147,6 @@ class _ContactsPageState extends ConsumerState<ContactsPage>
                     ),
                     onIgnore: () => ctl.ignore(g),
                   ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const ContactDeleteReviewPage(),
-                  ),
-                ),
-                icon: const Icon(Icons.delete_outline),
-                label: const Text('Choose Contacts to Delete'),
-              ),
             ]),
           ),
         ),

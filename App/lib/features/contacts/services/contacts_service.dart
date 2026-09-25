@@ -5,12 +5,15 @@ import '../models/contact_record.dart';
 class ContactsService {
   static const _channel = MethodChannel('tidy/contacts');
   bool get supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-  Future<Map<String, Object?>> read() async {
+  Future<Map<String, Object?>> read(Set<String> ids) async {
     if (!supported) {
       return {'status': 'unsupported', 'contacts': <ContactRecord>[]};
     }
     final result =
-        await _channel.invokeMapMethod<Object?, Object?>('read') ?? {};
+        await _channel.invokeMapMethod<Object?, Object?>('read', {
+          'ids': ids.toList(),
+        }) ??
+        {};
     return {
       'status': result['status'] as String? ?? 'error',
       'contacts': ((result['contacts'] as List?) ?? const [])
@@ -21,7 +24,7 @@ class ContactsService {
     };
   }
 
-  Future<void> merge(
+  Future<ContactRecord> merge(
     ContactRecord keeper,
     ContactRecord other, {
     required String givenName,
@@ -31,7 +34,7 @@ class ContactsService {
     required List<String> emails,
     required bool acknowledgeUnreadableNotes,
   }) async {
-    await _channel.invokeMethod<void>('merge', {
+    final result = await _channel.invokeMapMethod<Object?, Object?>('merge', {
       'keeper': keeper.id,
       'other': other.id,
       'versions': {keeper.id: keeper.version, other.id: other.version},
@@ -42,6 +45,12 @@ class ContactsService {
       'emails': emails,
       'acknowledgeUnreadableNotes': acknowledgeUnreadableNotes,
     });
+    if (result == null) {
+      throw StateError(
+        'The saved contact could not be verified. Refresh Contacts before continuing.',
+      );
+    }
+    return ContactRecord.fromMap(result);
   }
 
   Future<void> delete(List<ContactRecord> records) async =>

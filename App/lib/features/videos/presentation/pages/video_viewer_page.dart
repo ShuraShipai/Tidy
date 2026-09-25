@@ -155,14 +155,9 @@ class _VideoViewerPageState extends ConsumerState<VideoViewerPage> {
                               TidyActionButton(
                                 label: 'Compress Video',
                                 style: TidyActionStyle.secondary,
-                                onPressed: () =>
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Video compression is not available yet.',
-                                        ),
-                                      ),
-                                    ),
+                                onPressed: () => context.push(
+                                  '/bonus/compression?id=${Uri.encodeQueryComponent(video.id)}',
+                                ),
                               ),
                             ],
                           );

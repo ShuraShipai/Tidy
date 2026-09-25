@@ -83,13 +83,24 @@ abstract final class TidyTheme {
         centerTitle: false,
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 85,
-        backgroundColor: TidyColors.surface,
-        indicatorColor: TidyColors.primary.withValues(alpha: 0.1),
+        height: 51,
+        backgroundColor: TidyColors.background,
+        indicatorColor: Colors.transparent,
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          return IconThemeData(
+            size: 23,
+            color: states.contains(WidgetState.selected)
+                ? TidyColors.primary
+                : TidyColors.secondaryText,
+          );
+        }),
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
           return TextStyle(
             fontFamily: 'DM Sans',
             fontSize: 10,
+            color: states.contains(WidgetState.selected)
+                ? TidyColors.primary
+                : TidyColors.secondaryText,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w500,

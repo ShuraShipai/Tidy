@@ -8,7 +8,7 @@ final class ContactsNativeService {
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
-    case "read": read(result)
+    case "read": read(call.arguments as? [String: Any] ?? [:], result)
     case "merge": merge(call.arguments as? [String: Any] ?? [:], result)
     case "delete": delete(call.arguments as? [String: Any] ?? [:], result)
     default: result(FlutterMethodNotImplemented)
@@ -28,22 +28,33 @@ final class ContactsNativeService {
   }
 
   private let keys: [CNKeyDescriptor] = [CNContactIdentifierKey as CNKeyDescriptor,
+    CNContactNamePrefixKey as CNKeyDescriptor, CNContactMiddleNameKey as CNKeyDescriptor,
+    CNContactNameSuffixKey as CNKeyDescriptor, CNContactNicknameKey as CNKeyDescriptor,
+    CNContactPreviousFamilyNameKey as CNKeyDescriptor,
     CNContactGivenNameKey as CNKeyDescriptor, CNContactFamilyNameKey as CNKeyDescriptor,
+    CNContactPhoneticGivenNameKey as CNKeyDescriptor, CNContactPhoneticMiddleNameKey as CNKeyDescriptor,
+    CNContactPhoneticFamilyNameKey as CNKeyDescriptor,
     CNContactOrganizationNameKey as CNKeyDescriptor, CNContactPhoneNumbersKey as CNKeyDescriptor,
+    CNContactJobTitleKey as CNKeyDescriptor, CNContactDepartmentNameKey as CNKeyDescriptor,
     CNContactEmailAddressesKey as CNKeyDescriptor, CNContactPostalAddressesKey as CNKeyDescriptor,
     CNContactUrlAddressesKey as CNKeyDescriptor, CNContactSocialProfilesKey as CNKeyDescriptor,
     CNContactInstantMessageAddressesKey as CNKeyDescriptor, CNContactRelationsKey as CNKeyDescriptor,
     CNContactDatesKey as CNKeyDescriptor, CNContactBirthdayKey as CNKeyDescriptor,
     CNContactImageDataKey as CNKeyDescriptor]
 
-  private func read(_ result: @escaping FlutterResult) {
+  private func read(_ args: [String: Any], _ result: @escaping FlutterResult) {
     let access = status()
     guard access == "authorized" || access == "limited" else {
       DispatchQueue.main.async { result(["status": access, "contacts": []]) }; return
     }
+    guard let ids = args["ids"] as? [String] else {
+      result(FlutterError(code: "invalid_request", message: "Contact review identifiers are missing.", details: nil)); return
+    }
+    if ids.isEmpty { result(["status": access, "contacts": []]); return }
     DispatchQueue.global(qos: .userInitiated).async {
       do {
         let request = CNContactFetchRequest(keysToFetch: self.keys); request.unifyResults = false
+        request.predicate = CNContact.predicateForContacts(withIdentifiers: ids)
         var records = [[String: Any]]()
         try self.store.enumerateContacts(with: request) { c, _ in records.append(self.map(c)) }
         DispatchQueue.main.async { result(["status": access, "contacts": records]) }
@@ -60,6 +71,11 @@ final class ContactsNativeService {
 
   private func fingerprint(_ c: CNContact) -> String {
     let details: [String: Any] = ["given": c.givenName, "family": c.familyName, "org": c.organizationName,
+      "prefix": c.namePrefix, "middle": c.middleName, "suffix": c.nameSuffix,
+      "nickname": c.nickname, "previousFamily": c.previousFamilyName,
+      "phoneticGiven": c.phoneticGivenName, "phoneticMiddle": c.phoneticMiddleName,
+      "phoneticFamily": c.phoneticFamilyName, "jobTitle": c.jobTitle,
+      "department": c.departmentName,
       "phones": c.phoneNumbers.map { "\($0.label ?? ""):\($0.value.stringValue)" },
       "emails": c.emailAddresses.map { "\($0.label ?? ""):\($0.value as String)" },
       "addresses": c.postalAddresses.map { "\($0.value)" }, "urls": c.urlAddresses.map { $0.value as String },
@@ -72,7 +88,29 @@ final class ContactsNativeService {
   }
 
   private func fetch(_ id: String) throws -> CNContact {
-    try store.unifiedContact(withIdentifier: id, keysToFetch: keys)
+    let request = CNContactFetchRequest(keysToFetch: keys)
+    request.predicate = CNContact.predicateForContacts(withIdentifiers: [id])
+    request.unifyResults = false
+    var match: CNContact?
+    try store.enumerateContacts(with: request) { contact, stop in
+      if contact.identifier == id {
+        match = contact
+        stop.pointee = true
+      }
+    }
+    guard let match else {
+      throw NSError(domain: "TidyContacts", code: 3,
+        userInfo: [NSLocalizedDescriptionKey: "A reviewed contact is no longer available. Review current contacts again."])
+    }
+    return match
+  }
+
+  private func preserved(_ first: String, _ second: String, field: String) throws -> String {
+    if !first.isEmpty && !second.isEmpty && first != second {
+      throw NSError(domain: "TidyContacts", code: 4,
+        userInfo: [NSLocalizedDescriptionKey: "These contacts have different \(field). Keep them separate so neither value is lost."])
+    }
+    return first.isEmpty ? second : first
   }
 
   private func merge(_ args: [String: Any], _ result: @escaping FlutterResult) {
@@ -83,6 +121,9 @@ final class ContactsNativeService {
       result(FlutterError(code: "notes_acknowledgement_required", message: "Confirm the Notes limitation in the merge preview before continuing.", details: nil)); return
     }
     do {
+      guard keeperID != otherID else {
+        result(FlutterError(code: "invalid_request", message: "Choose two different contacts to merge.", details: nil)); return
+      }
       let original = try fetch(keeperID), source = try fetch(otherID)
       guard fingerprint(original) == versions[keeperID], fingerprint(source) == versions[otherID] else {
         result(FlutterError(code: "changed", message: "A contact changed since review. Compare the current records again.", details: nil)); return
@@ -92,10 +133,23 @@ final class ContactsNativeService {
       if let a = original.birthday, let b = source.birthday, a != b {
         result(FlutterError(code: "conflict", message: "These contacts have different birthdays. Keep them separate to avoid losing either date.", details: nil)); return
       }
+      if let a = original.imageData, let b = source.imageData, a != b {
+        result(FlutterError(code: "conflict", message: "These contacts have different photos. Keep them separate so neither photo is lost.", details: nil)); return
+      }
       let mutable = original.mutableCopy() as! CNMutableContact
+      mutable.namePrefix = try preserved(original.namePrefix, source.namePrefix, field: "name prefixes")
+      mutable.middleName = try preserved(original.middleName, source.middleName, field: "middle names")
+      mutable.nameSuffix = try preserved(original.nameSuffix, source.nameSuffix, field: "name suffixes")
+      mutable.nickname = try preserved(original.nickname, source.nickname, field: "nicknames")
+      mutable.previousFamilyName = try preserved(original.previousFamilyName, source.previousFamilyName, field: "previous family names")
+      mutable.phoneticGivenName = try preserved(original.phoneticGivenName, source.phoneticGivenName, field: "phonetic given names")
+      mutable.phoneticMiddleName = try preserved(original.phoneticMiddleName, source.phoneticMiddleName, field: "phonetic middle names")
+      mutable.phoneticFamilyName = try preserved(original.phoneticFamilyName, source.phoneticFamilyName, field: "phonetic family names")
+      mutable.organizationName = try preserved(original.organizationName, source.organizationName, field: "company names")
+      mutable.jobTitle = try preserved(original.jobTitle, source.jobTitle, field: "job titles")
+      mutable.departmentName = try preserved(original.departmentName, source.departmentName, field: "departments")
       mutable.givenName = args["givenName"] as? String ?? original.givenName
       mutable.familyName = args["familyName"] as? String ?? original.familyName
-      mutable.organizationName = args["organization"] as? String ?? original.organizationName
       mutable.phoneNumbers = self.unique(original.phoneNumbers + source.phoneNumbers) { "\($0.value.stringValue.filter(\.isNumber))" }
       mutable.emailAddresses = self.unique(original.emailAddresses + source.emailAddresses) { String($0.value).trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
       mutable.postalAddresses = self.unique(original.postalAddresses + source.postalAddresses) { "\($0.value)" }
@@ -108,7 +162,8 @@ final class ContactsNativeService {
       if mutable.imageData == nil { mutable.imageData = source.imageData }
       let request = CNSaveRequest(); request.update(mutable); request.delete(source.mutableCopy() as! CNMutableContact)
       try store.execute(request)
-      DispatchQueue.main.async { result(nil) }
+      let saved = map(mutable)
+      DispatchQueue.main.async { result(saved) }
     } catch { DispatchQueue.main.async { result(FlutterError(code: "merge_failed", message: error.localizedDescription, details: nil)) } }
   }
 

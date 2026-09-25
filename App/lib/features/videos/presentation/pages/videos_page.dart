@@ -273,8 +273,11 @@ class _VideosPageState extends ConsumerState<VideosPage> {
       ),
     );
     if (!mounted || reviewed == null || reviewed.isEmpty) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => VideoDeleteConfirmation(videos: reviewed),
     );
     if (!mounted || confirmed != true) return;

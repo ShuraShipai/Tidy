@@ -17,17 +17,14 @@ class ContactRecordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TidyClaySurface(
     radius: TidyRadii.card,
-    color: TidyColors.surface,
+    color: preview ? TidyColors.noteBackground : TidyColors.surface,
     shadows: TidyShadows.raised,
     child: Padding(
       padding: const EdgeInsets.all(TidySpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            preview ? 'Merged contact preview' : contact.name,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(contact.name, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           _field('Name', contact.name),
           if (contact.phones.isNotEmpty)

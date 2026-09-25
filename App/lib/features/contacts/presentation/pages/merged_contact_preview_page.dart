@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design/tidy_colors.dart';
+import '../../../../core/design/tidy_radii.dart';
 import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
 import '../../controllers/contacts_controller.dart';
 import '../../models/contact_record.dart';
+import '../../widgets/contact_merge_confirmation_sheet.dart';
+import '../../widgets/contact_page_heading.dart';
 import '../../widgets/contact_record_card.dart';
+import 'contact_delete_review_page.dart';
+import 'contact_merge_success_page.dart';
 
 class MergedContactPreviewPage extends ConsumerStatefulWidget {
   const MergedContactPreviewPage({required this.group, super.key});
@@ -17,7 +22,6 @@ class MergedContactPreviewPage extends ConsumerStatefulWidget {
 
 class _MergedContactPreviewPageState
     extends ConsumerState<MergedContactPreviewPage> {
-  String? keeperId;
   bool busy = false, done = false;
   bool notesLossAcknowledged = false;
   String? error;
@@ -25,7 +29,9 @@ class _MergedContactPreviewPageState
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(contactsControllerProvider).value;
-    if (done && completedRecord != null) return _successPage(completedRecord!);
+    if (done && completedRecord != null) {
+      return ContactMergeSuccessPage(contact: completedRecord!);
+    }
     final a = s?.byId(widget.group.first), b = s?.byId(widget.group.second);
     if (a == null || b == null) {
       return Scaffold(
@@ -37,10 +43,7 @@ class _MergedContactPreviewPageState
         ),
       );
     }
-    final keeper = (keeperId == a.id || keeperId == b.id)
-            ? (keeperId == a.id ? a : b)
-            : a,
-        other = keeper.id == a.id ? b : a;
+    final keeper = a, other = b;
     final merged = ContactRecord(
       id: keeper.id,
       givenName: keeper.givenName,
@@ -48,182 +51,126 @@ class _MergedContactPreviewPageState
       organization: keeper.organization.isNotEmpty
           ? keeper.organization
           : other.organization,
-      phones: _union(a.phones, b.phones),
-      emails: _union(a.emails, b.emails),
+      phones: _union(
+        a.phones,
+        b.phones,
+        (value) => value.replaceAll(RegExp(r'\D'), ''),
+      ),
+      emails: _union(a.emails, b.emails, (value) => value.trim().toLowerCase()),
       version: keeper.version,
     );
     return Scaffold(
       backgroundColor: TidyColors.background,
-      appBar: AppBar(
-        title: Text(done ? 'Contacts merged' : 'Merged Contact Preview'),
-      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(TidySpacing.lg),
           children: [
-            if (done) ...[
-              const Icon(
-                Icons.contacts_rounded,
-                color: TidyColors.emerald,
-                size: 60,
+            ContactPageHeading(
+              backLabel: 'Back',
+              title: 'Merged Contact Preview',
+              subtitle:
+                  'Review the combined name, phone numbers, email addresses and company.',
+              onBack: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(height: 18),
+            ContactRecordCard(contact: merged, preview: true),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: TidyColors.noteBackground,
+                borderRadius: BorderRadius.circular(18),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'All together now.',
-                style: Theme.of(context).textTheme.headlineLarge,
+              child: Text(
+                'Other supported details are preserved unless they conflict; conflicting details prevent the merge. iOS does not let Tidy read Contact Notes without a restricted Apple entitlement. Source Notes may be lost, so keep the contacts separate if you need them.',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'The reviewed source record was merged. The preserved fields are shown below.',
+            ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: notesLossAcknowledged,
+              onChanged: busy
+                  ? null
+                  : (value) =>
+                        setState(() => notesLossAcknowledged = value ?? false),
+              title: const Text(
+                'I understand source Notes may not be preserved',
               ),
-              const SizedBox(height: 20),
-              ContactRecordCard(contact: merged, preview: true),
-              const SizedBox(height: 24),
-              TidyActionButton(
-                label: 'Back to Contacts',
-                onPressed: () =>
-                    Navigator.of(context).popUntil((r) => r.isFirst),
-              ),
-            ] else ...[
-              Text(
-                'Exactly what the merged contact will contain.',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Keep the primary name and company from',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(value: a.id, label: Text(a.name)),
-                  ButtonSegment(value: b.id, label: Text(b.name)),
-                ],
-                selected: {keeper.id},
-                onSelectionChanged: (v) => setState(() => keeperId = v.first),
-              ),
-              const SizedBox(height: 18),
-              ContactRecordCard(contact: merged, preview: true),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: TidyColors.noteBackground,
-                  borderRadius: BorderRadius.circular(18),
-                ),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  'Unique phone numbers, email addresses and other readable details are included. iOS does not allow Tidy to read Contact Notes without a restricted Apple entitlement. Notes on the source contact may be lost if you merge; keep the contacts separate to preserve them.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  error!,
+                  style: const TextStyle(color: TidyColors.destructive),
                 ),
               ),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                value: notesLossAcknowledged,
-                onChanged: busy
-                    ? null
-                    : (value) => setState(
-                        () => notesLossAcknowledged = value ?? false,
+            const SizedBox(height: 22),
+            TidyActionButton(
+              label: busy ? 'Merging…' : 'Merge Contacts',
+              onPressed: busy || !notesLossAcknowledged
+                  ? null
+                  : () => _confirm(keeper, other, merged),
+            ),
+            const SizedBox(height: 8),
+            TidyActionButton(
+              label: 'Keep Separate',
+              style: TidyActionStyle.secondary,
+              onPressed: busy
+                  ? null
+                  : () {
+                      ref
+                          .read(contactsControllerProvider.notifier)
+                          .ignore(widget.group);
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: busy
+                  ? null
+                  : () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            ContactDeleteReviewPage(initialContactId: other.id),
                       ),
-                title: const Text(
-                  'I understand source Notes may not be preserved',
-                ),
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              if (error != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    error!,
-                    style: const TextStyle(color: TidyColors.destructive),
-                  ),
-                ),
-              const SizedBox(height: 22),
-              TidyActionButton(
-                label: busy ? 'Merging…' : 'Merge Contacts',
-                onPressed: busy || !notesLossAcknowledged
-                    ? null
-                    : () => _confirm(keeper, other, merged),
-              ),
-              const SizedBox(height: 8),
-              TidyActionButton(
-                label: 'Keep Separate',
-                style: TidyActionStyle.secondary,
-                onPressed: busy
-                    ? null
-                    : () {
-                        ref
-                            .read(contactsControllerProvider.notifier)
-                            .ignore(widget.group);
-                        Navigator.of(context).pop();
-                      },
-              ),
-            ],
+                    ),
+              child: const Text('Delete Contact…'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  List<String> _union(List<String> a, List<String> b) => [
-    ...{...a, ...b},
-  ];
+  List<String> _union(
+    List<String> a,
+    List<String> b,
+    String Function(String) normalize,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final value in [...a, ...b])
+        if (seen.add(normalize(value))) value,
+    ];
+  }
 
-  Widget _successPage(ContactRecord contact) => Scaffold(
-    backgroundColor: TidyColors.background,
-    appBar: AppBar(title: const Text('Contacts merged')),
-    body: SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(TidySpacing.lg),
-        children: [
-          const Icon(
-            Icons.contacts_rounded,
-            color: TidyColors.emerald,
-            size: 60,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'All together now.',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'The reviewed source record was merged. The preserved fields are shown below.',
-          ),
-          const SizedBox(height: 20),
-          ContactRecordCard(contact: contact, preview: true),
-          const SizedBox(height: 24),
-          TidyActionButton(
-            label: 'Back to Contacts',
-            onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-          ),
-        ],
-      ),
-    ),
-  );
   Future<void> _confirm(
     ContactRecord keeper,
     ContactRecord other,
     ContactRecord merged,
   ) async {
-    final yes = await showDialog<bool>(
+    final yes = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Merge these contacts?'),
-        content: const Text(
-          'The two reviewed records will become the merged contact shown in your preview. This change will be saved to Contacts.',
+      isScrollControlled: true,
+      backgroundColor: TidyColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(TidyRadii.card),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Merge Contacts'),
-          ),
-        ],
       ),
+      builder: (_) => const ContactMergeConfirmationSheet(),
     );
     if (yes != true) return;
     setState(() {
@@ -231,7 +178,7 @@ class _MergedContactPreviewPageState
       error = null;
     });
     try {
-      await ref
+      final saved = await ref
           .read(contactsControllerProvider.notifier)
           .merge(
             keeper,
@@ -247,7 +194,7 @@ class _MergedContactPreviewPageState
         setState(() {
           busy = false;
           done = true;
-          completedRecord = merged;
+          completedRecord = saved;
         });
       }
     } catch (e) {

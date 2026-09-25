@@ -6,12 +6,14 @@ import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../scan/controllers/scan_controller.dart';
 import '../../../scan/controllers/scan_snapshot_provider.dart';
 import '../../../scan/models/scan_snapshot.dart';
+import '../../../scan/models/scan_state.dart' as scan_data;
 import '../../widgets/home_header.dart';
 import '../../widgets/home_storage_card.dart';
 import '../../widgets/home_scan_banner.dart';
 import '../../widgets/home_category_card.dart';
 import '../../widgets/home_empty_state.dart';
 import '../../widgets/home_access_card.dart';
+import '../../widgets/home_interrupted_scan_card.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -42,6 +44,10 @@ class HomePage extends ConsumerWidget {
                 compact: state.running,
               ),
               const SizedBox(height: TidySpacing.lg),
+              if (state.phase == scan_data.ScanPhase.cancelled) ...[
+                HomeInterruptedScanCard(hasResults: state.hasResults),
+                const SizedBox(height: TidySpacing.md),
+              ],
               if (showEmpty)
                 HomeEmptyState(snapshot: snapshot, onScan: scan)
               else ...[
@@ -58,6 +64,7 @@ class HomePage extends ConsumerWidget {
                 HomeStorageCard(
                   snapshot: snapshot,
                   onScan: scan,
+                  onReview: () => context.push('/cleanup/review'),
                   permissionUnavailable: noAccess,
                 ),
                 const SizedBox(height: TidySpacing.lg),

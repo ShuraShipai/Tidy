@@ -8,6 +8,8 @@ import UIKit
   private let photoLibraryService = PhotoLibraryNativeService()
   private let contactsService = ContactsNativeService()
   private let videoLibraryService = VideoLibraryNativeService()
+  private let settingsService = SettingsNativeService()
+  private let groupEightService = GroupEightNativeService()
 
   override func application(
     _ application: UIApplication,
@@ -30,5 +32,12 @@ import UIKit
     let contactsChannel = FlutterMethodChannel(name: "tidy/contacts", binaryMessenger: contactsRegistrar.messenger())
     contactsChannel.setMethodCallHandler { [contactsService] call, result in contactsService.handle(call, result: result) }
     onboardingService.register(messenger: engineBridge.applicationRegistrar.messenger())
+    settingsService.register(messenger: engineBridge.applicationRegistrar.messenger())
+    groupEightService.register(messenger: engineBridge.applicationRegistrar.messenger())
+  }
+
+  override func applicationDidEnterBackground(_ application: UIApplication) {
+    groupEightService.lockVault()
+    super.applicationDidEnterBackground(application)
   }
 }

@@ -35,4 +35,12 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(error?.code, "invalid_subject")
   }
 
+  func testCalendarSearchWindowIncludesRecentEventsWithoutExceedingEventKitLimit() {
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    let start = GroupEightNativeService.calendarSearchStart(now: now)
+    XCTAssertLessThan(start, now.addingTimeInterval(-24 * 60 * 60))
+    XCTAssertEqual(now.timeIntervalSince(start), GroupEightNativeService.calendarLookback)
+    XCTAssertLessThan(now.timeIntervalSince(start), 4 * 366 * 24 * 60 * 60)
+  }
+
 }

@@ -6,6 +6,10 @@
     <string>Tidy reads the photos you allow to find items for your review. Scanning never changes your library.</string>
     <key>NSContactsUsageDescription</key>
     <string>Tidy reads accessible phone numbers and email addresses to suggest possible duplicate contacts for review.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Use Face ID to unlock your private copies stored in Tidy Vault.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Tidy reads calendar events only when you choose Calendar Cleanup so you can review specific old or repeated occurrences before removal.</string>
     <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key><true/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
@@ -29,6 +33,13 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array><string>tidy</string></array>
+		</dict>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

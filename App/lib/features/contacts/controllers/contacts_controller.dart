@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../scan/controllers/scan_controller.dart';
+import '../../scan/models/scan_state.dart';
 import '../models/contact_record.dart';
 import '../repositories/contacts_repository.dart';
 import '../services/contacts_service.dart';
@@ -54,29 +55,45 @@ class ContactsState {
 
 class ContactsController extends AsyncNotifier<ContactsState> {
   ContactsRepository get _repo => ref.read(contactsRepositoryProvider);
+  int _refreshGeneration = 0;
   @override
   Future<ContactsState> build() async {
     ref.listen(scanControllerProvider, (previous, next) {
-      if (previous?.completedAt != next.completedAt ||
-          (previous?.hasResults ?? false) != next.hasResults) {
+      if (previous == null ||
+          previous.completedAt != next.completedAt ||
+          previous.permissions['contacts'] != next.permissions['contacts'] ||
+          previous.contactCount != next.contactCount ||
+          _groupSignature(previous.contacts) !=
+              _groupSignature(next.contacts)) {
         refresh();
       }
     });
     return _load();
   }
 
+  String _groupSignature(Iterable<MatchGroup> groups) {
+    final signatures = <String>[];
+    for (final group in groups) {
+      signatures.add(
+        '${(group.ids.toList()..sort()).join(',')}:${group.evidence}',
+      );
+    }
+    return (signatures..sort()).join('|');
+  }
+
   Future<ContactsState> _load() async {
     final scan = ref.read(scanControllerProvider);
-    if (!scan.hasResults) {
+    if (scan.completedAt == null) {
       return ContactsState(status: scan.running ? 'scanning' : 'notScanned');
     }
     final access = scan.permissions['contacts'];
     if (access != 'authorized' && access != 'limited') {
       return ContactsState(status: access ?? 'notScanned');
     }
-    final (status, records) = await _repo.read();
+    final reviewedIds = {for (final group in scan.contacts) ...group.ids};
+    final (status, records) = await _repo.read(reviewedIds);
     final current = ref.read(scanControllerProvider);
-    if (!current.hasResults || current.completedAt != scan.completedAt) {
+    if (current.completedAt != scan.completedAt) {
       return const ContactsState(status: 'notScanned');
     }
     final reviewGroups = _repo.reviewPairs(records, current.contacts);
@@ -88,17 +105,22 @@ class ContactsController extends AsyncNotifier<ContactsState> {
   }
 
   Future<void> refresh() async {
-    final old = state.value;
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final fresh = await _load();
-      if (old == null) return fresh;
-      final ids = fresh.contacts.map((c) => c.id).toSet();
-      return fresh.copy(
-        ignored: old.ignored,
-        selected: old.selected.intersection(ids),
-      );
-    });
+    final generation = ++_refreshGeneration;
+    final updated = await AsyncValue.guard(_load);
+    if (!ref.mounted || generation != _refreshGeneration) return;
+    final fresh = updated.asData?.value;
+    final current = state.value;
+    if (fresh == null || current == null) {
+      state = updated;
+      return;
+    }
+    final ids = fresh.contacts.map((contact) => contact.id).toSet();
+    state = AsyncData(
+      fresh.copy(
+        ignored: current.ignored,
+        selected: current.selected.intersection(ids),
+      ),
+    );
   }
 
   void ignore(ContactMatchGroup g) {
@@ -119,7 +141,14 @@ class ContactsController extends AsyncNotifier<ContactsState> {
     if (s != null) state = AsyncData(s.copy(selected: {}));
   }
 
-  Future<void> merge(
+  void setSelection(Set<String> ids) {
+    final s = state.value;
+    if (s == null) return;
+    final available = s.contacts.map((contact) => contact.id).toSet();
+    state = AsyncData(s.copy(selected: ids.intersection(available)));
+  }
+
+  Future<ContactRecord> merge(
     ContactRecord keeper,
     ContactRecord other, {
     required String givenName,
@@ -130,10 +159,10 @@ class ContactsController extends AsyncNotifier<ContactsState> {
     required bool acknowledgeUnreadableNotes,
   }) async {
     final s = state.value;
-    if (s == null) return;
+    if (s == null) throw StateError('Contacts are not ready for merging.');
     state = AsyncData(s.copy(message: null));
     try {
-      await _repo.merge(
+      final merged = await _repo.merge(
         keeper,
         other,
         givenName: givenName,
@@ -144,6 +173,7 @@ class ContactsController extends AsyncNotifier<ContactsState> {
         acknowledgeUnreadableNotes: acknowledgeUnreadableNotes,
       );
       await refresh();
+      return merged;
     } catch (e) {
       final now = state.value ?? s;
       state = AsyncData(now.copy(message: e.toString()));
@@ -157,9 +187,16 @@ class ContactsController extends AsyncNotifier<ContactsState> {
     final selected = s.contacts
         .where((c) => s.selected.contains(c.id))
         .toList();
+    await deleteRecords(selected);
+  }
+
+  Future<void> deleteRecords(List<ContactRecord> records) async {
+    if (records.isEmpty) return;
+    final s = state.value;
+    if (s == null) return;
     state = AsyncData(s.copy(message: null));
     try {
-      await _repo.delete(selected);
+      await _repo.delete(records);
       await refresh();
     } catch (e) {
       final now = state.value ?? s;

@@ -234,8 +234,9 @@ void main() {
       expect(find.text('Review Videos'), findsNWidgets(2));
       await tester.tap(find.text('Continue to Confirmation'));
       await tester.pumpAndSettle();
-      expect(find.text('Delete 1 videos?'), findsOneWidget);
-      await tester.tap(find.text('Keep Videos'));
+      expect(find.text('Delete 1 video?'), findsOneWidget);
+      expect(find.textContaining('You reviewed this video ('), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(find.text('1 selected'), findsOneWidget);
       expect(service.deleteRequests, isEmpty);

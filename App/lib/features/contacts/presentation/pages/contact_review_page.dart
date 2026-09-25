@@ -4,6 +4,7 @@ import '../../../../core/design/tidy_colors.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
 import '../../controllers/contacts_controller.dart';
 import '../../models/contact_record.dart';
+import '../../widgets/contact_page_heading.dart';
 import '../../widgets/contact_record_card.dart';
 import 'merged_contact_preview_page.dart';
 import 'contact_delete_review_page.dart';
@@ -27,16 +28,17 @@ class ContactReviewPage extends ConsumerWidget {
     }
     return Scaffold(
       backgroundColor: TidyColors.background,
-      appBar: AppBar(title: const Text('Review Contacts')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
           children: [
-            Text(
-              'Do these look like the same person?',
-              style: Theme.of(context).textTheme.titleLarge,
+            ContactPageHeading(
+              backLabel: 'Contacts',
+              title: 'Review Contacts',
+              subtitle: 'Do these look like the same person?',
+              onBack: () => Navigator.of(context).pop(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             ContactRecordCard(contact: a),
             const SizedBox(height: 12),
             ContactRecordCard(contact: b),

@@ -76,6 +76,28 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
      "contacts": access(CNContactStore.authorizationStatus(for: .contacts).rawValue)]
   }
   private func readable(_ value: String?) -> Bool { value == "authorized" || value == "limited" }
+  private func storedScanPreferences() -> [String: Any] {
+    let defaults = UserDefaults.standard
+    return [
+      "includeScreenshots": defaults.object(forKey: "tidy.includeScreenshots") as? Bool ?? true,
+      "includeLargeVideos": defaults.object(forKey: "tidy.includeLargeVideos") as? Bool ?? true,
+      "sensitivity": defaults.string(forKey: "tidy.photoSensitivity") ?? "balanced",
+    ]
+  }
+  private func similarityThreshold(_ preferences: [String: Any]) -> Float {
+    switch preferences["sensitivity"] as? String ?? "balanced" {
+    case "strict": return 0.2
+    case "broad": return 0.4
+    default: return 0.3
+    }
+  }
+  private func includedInScan(_ asset: PHAsset, preferences: [String: Any]) -> Bool {
+    if asset.mediaSubtypes.contains(.photoScreenshot),
+      preferences["includeScreenshots"] as? Bool == false { return false }
+    if asset.mediaType == .video,
+      preferences["includeLargeVideos"] as? Bool == false { return false }
+    return true
+  }
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "permissions": result(permissions())
@@ -346,6 +368,8 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
       updated["phase"] = "cancelled"
       updated["message"] = "The previous scan did not finish. Last completed findings are still available."
     }
+    let preferences = updated["scanPreferences"] as? [String: Any] ?? storedScanPreferences()
+    let similarityLimit = similarityThreshold(preferences)
     let current = permissions()
     updated["permissions"] = current
     if let previous = diskRecord?["snapshot"] as? [String: Any],
@@ -418,6 +442,10 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
         // Exact resource reads and hashes are needed only for new/changed assets.
         for asset in live where changed.contains(asset.localIdentifier) {
           guard valid(version) else { return }
+          guard includedInScan(asset, preferences: preferences) else {
+            nextByID.removeValue(forKey: asset.localIdentifier)
+            continue
+          }
           let (item, print) = mediaItem(asset, version: version, profile: profile)
           nextByID[asset.localIdentifier] = item
           checked.insert(asset.localIdentifier)
@@ -459,7 +487,7 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
           for previous in candidates {
             guard let other = prints[previous.localIdentifier] else { continue }
             var distance: Float = 0
-            if (try? print.computeDistance(&distance, to: other)) != nil && distance < 0.3 {
+            if (try? print.computeDistance(&distance, to: other)) != nil && distance < similarityLimit {
               pairs.append([previous.localIdentifier, asset.localIdentifier])
             }
           }
@@ -649,7 +677,9 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
     let scanStarted = ProcessInfo.processInfo.systemUptime
     let profile = ScanProfile()
     let permissions = permissions()
-    var base: [String: Any] = ["permissions": permissions]
+    let preferences = storedScanPreferences()
+    let similarityLimit = similarityThreshold(preferences)
+    var base: [String: Any] = ["permissions": permissions, "scanPreferences": preferences]
     let storageStarted = ProcessInfo.processInfo.systemUptime
     do {
       let volume = try URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityKey])
@@ -689,6 +719,16 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
         autoreleasepool {
           let asset = assets.object(at: index)
           photoEntries.append(self.fingerprintEntry(asset))
+          let isScreenshot = asset.mediaSubtypes.contains(.photoScreenshot)
+          let isVideo = asset.mediaType == .video
+          let include = (isScreenshot ? (preferences["includeScreenshots"] as? Bool ?? true) : true) &&
+            (isVideo ? (preferences["includeLargeVideos"] as? Bool ?? true) : true)
+          if !include {
+            var progress = base
+            progress.merge(["phase": "scanning", "stage": "media", "processed": index + 1, "total": assets.count]) { _, new in new }
+            publish(progress, version: version)
+            return
+          }
           var item: [String: Any] = ["id": asset.localIdentifier, "video": asset.mediaType == .video,
             "screenshot": asset.mediaSubtypes.contains(.photoScreenshot), "width": asset.pixelWidth,
             "height": asset.pixelHeight, "duration": asset.duration, "favorite": asset.isFavorite,
@@ -730,7 +770,7 @@ final class LibraryScanService: NSObject, PHPhotoLibraryChangeObserver {
               for previous in recent {
                 comparisons += 1
                 var distance: Float = 0
-                if (try? print.computeDistance(&distance, to: previous.2)) != nil && distance < 0.3 {
+                if (try? print.computeDistance(&distance, to: previous.2)) != nil && distance < similarityLimit {
                   pairs.append([previous.0, asset.localIdentifier])
                 }
               }

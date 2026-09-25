@@ -5,8 +5,8 @@ import '../services/contacts_service.dart';
 class ContactsRepository {
   const ContactsRepository(this.service);
   final ContactsService service;
-  Future<(String, List<ContactRecord>)> read() async {
-    final result = await service.read();
+  Future<(String, List<ContactRecord>)> read(Set<String> ids) async {
+    final result = await service.read(ids);
     return (
       result['status']! as String,
       result['contacts']! as List<ContactRecord>,
@@ -20,7 +20,7 @@ class ContactsRepository {
     Iterable<MatchGroup> scanGroups,
   ) {
     final byId = {for (final contact in contacts) contact.id: contact};
-    final pairs = <ContactMatchGroup>[];
+    final evidenceByPair = <String, Set<String>>{};
     for (final group in scanGroups) {
       final members = [for (final id in group.ids) ?byId[id]]
         ..sort((a, b) => a.id.compareTo(b.id));
@@ -48,14 +48,24 @@ class ContactsRepository {
               'Same phone number',
             if (leftEmails.intersection(rightEmails).isNotEmpty)
               'Same email address',
+            if (_namesSimilar(left, right)) 'Similar name',
           ];
           if (evidence.isNotEmpty) {
-            pairs.add(ContactMatchGroup(left.id, right.id, evidence));
+            evidenceByPair
+                .putIfAbsent('${left.id}|${right.id}', () => <String>{})
+                .addAll(evidence);
           }
         }
       }
     }
-    return List.unmodifiable(pairs);
+    return List.unmodifiable([
+      for (final pair in evidenceByPair.entries)
+        ContactMatchGroup(
+          pair.key.split('|').first,
+          pair.key.split('|').last,
+          pair.value.toList()..sort(),
+        ),
+    ]);
   }
 
   List<ContactMatchGroup> detect(List<ContactRecord> contacts) {
@@ -102,17 +112,8 @@ class ContactsRepository {
     // person reviews both records. Require substantial names to avoid matching
     // generic initials or one-word entries.
     for (var a = 0; a < contacts.length; a++) {
-      final left = _name(contacts[a]);
-      if (left.length < 7) continue;
       for (var b = a + 1; b < contacts.length; b++) {
-        final right = _name(contacts[b]);
-        final difference = (left.length - right.length).abs();
-        if (right.length >= 7 &&
-            left.substring(0, 2) == right.substring(0, 2) &&
-            difference <=
-                (left.length > right.length ? left.length : right.length) *
-                    .18 &&
-            _similarity(left, right) >= .82) {
+        if (_namesSimilar(contacts[a], contacts[b])) {
           parent[root(a)] = root(b);
           final pair = [contacts[a].id, contacts[b].id]..sort();
           reasons.putIfAbsent(pair.join('|'), () => {}).add('Similar name');
@@ -145,6 +146,15 @@ class ContactsRepository {
   String _name(ContactRecord contact) =>
       contact.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
+  bool _namesSimilar(ContactRecord a, ContactRecord b) {
+    final left = _name(a), right = _name(b);
+    if (left.length < 7 || right.length < 7) return false;
+    if (left.substring(0, 2) != right.substring(0, 2)) return false;
+    final longest = left.length > right.length ? left.length : right.length;
+    if ((left.length - right.length).abs() > longest * .18) return false;
+    return _similarity(left, right) >= .82;
+  }
+
   double _similarity(String a, String b) {
     final previous = List<int>.generate(b.length + 1, (i) => i);
     for (var i = 1; i <= a.length; i++) {
@@ -166,7 +176,7 @@ class ContactsRepository {
     return 1 - previous[b.length] / (a.length > b.length ? a.length : b.length);
   }
 
-  Future<void> merge(
+  Future<ContactRecord> merge(
     ContactRecord keeper,
     ContactRecord other, {
     required String givenName,
