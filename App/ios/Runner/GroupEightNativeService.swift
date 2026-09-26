@@ -44,7 +44,7 @@ final class GroupEightNativeService {
   private let vaultFolder: URL
   private let vaultIndexURL: URL
   private let historyURL: URL
-  private let groupID = "group.com.example.tidy"
+  private let groupID = "group.com.pinkshoe.tidy"
 
   init() {
     let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]

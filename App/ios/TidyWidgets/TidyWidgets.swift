@@ -1,7 +1,7 @@
 import SwiftUI
 import WidgetKit
 
-private let tidyGroupID = "group.com.example.tidy"
+private let tidyGroupID = "group.com.pinkshoe.tidy"
 
 struct TidyStorageEntry: TimelineEntry {
   let date: Date
