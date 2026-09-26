@@ -8,10 +8,15 @@ enum CleanupCategory {
 }
 
 class CategoryFinding {
-  const CategoryFinding({required this.count, this.estimatedBytes});
+  const CategoryFinding({
+    required this.count,
+    this.estimatedBytes,
+    this.unknownSizeCount = 0,
+  });
 
   final int count;
   final int? estimatedBytes;
+  final int unknownSizeCount;
 }
 
 class DeviceStorage {

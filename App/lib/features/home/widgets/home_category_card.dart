@@ -59,14 +59,15 @@ class HomeCategoryCard extends StatelessWidget {
     };
     final currentFinding = finding;
     final count = currentFinding?.count;
+    final isContacts = category == CleanupCategory.duplicateContacts;
     final value = currentFinding == null
         ? 'Not scanned'
-        : category == CleanupCategory.duplicateContacts
+        : isContacts
         ? '$count groups'
-        : currentFinding.estimatedBytes == null
-        ? count == 0
-              ? '0 B'
-              : 'Size unavailable'
+        : currentFinding.unknownSizeCount > 0
+        ? currentFinding.estimatedBytes! > 0
+              ? '${_formatSize(currentFinding.estimatedBytes!)} known'
+              : 'Size unknown'
         : _formatSize(currentFinding.estimatedBytes!);
     return TidyClaySurface(
       radius: TidyRadii.nested,
@@ -91,10 +92,10 @@ class HomeCategoryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: TidySpacing.sm),
+              const SizedBox(height: TidySpacing.xs),
               Text(
                 title,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(
                   context,
@@ -103,6 +104,8 @@ class HomeCategoryCard extends StatelessWidget {
               const SizedBox(height: TidySpacing.xs),
               Text(
                 value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontSize: 19),
@@ -111,14 +114,25 @@ class HomeCategoryCard extends StatelessWidget {
                 if (category != CleanupCategory.duplicateContacts)
                   Text(
                     '$count $unit',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                Text(
-                  footnote,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
+                if (currentFinding!.unknownSizeCount > 0 &&
+                    category != CleanupCategory.duplicateContacts)
+                  Text(
+                    '${currentFinding.unknownSizeCount} ${currentFinding.unknownSizeCount == 1 ? 'size' : 'sizes'} unavailable',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  )
+                else
+                  Text(
+                    footnote,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
               ],
             ],
           ),
@@ -132,6 +146,7 @@ class HomeCategoryCard extends StatelessWidget {
       return '${(bytes / 1000000000).toStringAsFixed(1)} GB';
     }
     if (bytes >= 1000000) return '${(bytes / 1000000).round()} MB';
+    if (bytes < 1000) return '$bytes B';
     return '${(bytes / 1000).round()} KB';
   }
 }

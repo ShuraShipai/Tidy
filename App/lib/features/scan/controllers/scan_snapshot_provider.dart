@@ -10,9 +10,8 @@ final scanSnapshotProvider = Provider<ScanSnapshot>((ref) {
     final list = items.toList();
     return CategoryFinding(
       count: list.length,
-      estimatedBytes: list.any((x) => x.bytes == null)
-          ? null
-          : list.fold<int>(0, (sum, x) => sum + x.bytes!),
+      estimatedBytes: list.fold<int>(0, (sum, x) => sum + (x.bytes ?? 0)),
+      unknownSizeCount: list.where((x) => x.bytes == null).length,
     );
   }
 
