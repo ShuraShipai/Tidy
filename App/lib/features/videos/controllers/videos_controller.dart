@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
+import '../../bonus/services/group_eight_service.dart';
 import '../../scan/controllers/scan_controller.dart';
 import '../../scan/models/scan_state.dart' as scan;
 import '../models/video_record.dart';
@@ -136,6 +139,18 @@ class VideosController extends Notifier<VideosState> {
     );
     try {
       final outcome = await ref.read(videoRepositoryProvider).delete(selected);
+      if (outcome.deletedIds.isNotEmpty) {
+        unawaited(
+          ref.read(groupEightServiceProvider).recordCleanupHistorySafely([
+            {
+              'category': 'Videos',
+              'count': outcome.deletedIds.length,
+              'bytes': outcome.estimatedBytes,
+              'description': '${outcome.deletedIds.length} videos removed',
+            },
+          ]),
+        );
+      }
       if (!ref.mounted) return outcome;
       await ref
           .read(scanControllerProvider.notifier)

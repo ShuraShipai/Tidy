@@ -129,6 +129,16 @@ class GroupEightService {
     await _channel.invokeMethod<void>('history.recordCleanup', {'rows': rows});
   }
 
+  Future<void> recordCleanupHistorySafely(
+    List<Map<String, Object?>> rows,
+  ) async {
+    try {
+      await recordCleanupHistory(rows);
+    } catch (_) {
+      // A history write must not change the result of a verified cleanup.
+    }
+  }
+
   static Map<String, Object?> _map(Object? value) => value is Map
       ? value.map((key, value) => MapEntry(key.toString(), value))
       : <String, Object?>{};

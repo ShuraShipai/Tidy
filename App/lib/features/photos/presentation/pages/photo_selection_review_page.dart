@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,8 @@ import '../../../../core/design/tidy_spacing.dart';
 import '../../../../core/widgets/tidy_action_button.dart';
 import '../../../../core/widgets/tidy_page_background.dart';
 import '../../../scan/controllers/scan_controller.dart';
+import '../../../scan/models/scan_state.dart';
+import '../../../bonus/services/group_eight_service.dart';
 import '../../controllers/photo_selection_controller.dart';
 import '../../models/photo_format.dart';
 import '../../services/photo_library_service.dart';
@@ -175,14 +179,39 @@ class _PhotoSelectionReviewPageState
       final outcome = await ref
           .read(photoLibraryServiceProvider)
           .delete(reviewed);
+      final deletedIds = outcome.deletedIds.intersection(reviewed);
+      if (deletedIds.isNotEmpty) {
+        final mediaById = {
+          for (final media in ref.read(scanControllerProvider).media)
+            media.id: media,
+        };
+        final deletedMedia = deletedIds
+            .map((id) => mediaById[id])
+            .whereType<MediaRecord>()
+            .toList(growable: false);
+        final bytesKnown =
+            deletedMedia.length == deletedIds.length &&
+            deletedMedia.every((media) => media.bytes != null);
+        final bytes = bytesKnown
+            ? deletedMedia.fold<int>(0, (sum, media) => sum + media.bytes!)
+            : null;
+        unawaited(
+          ref.read(groupEightServiceProvider).recordCleanupHistorySafely([
+            {
+              'category': 'Photos',
+              'count': deletedIds.length,
+              'bytes': bytes,
+              'description': '${deletedIds.length} photos removed',
+            },
+          ]),
+        );
+      }
       ref
           .read(photoSelectionControllerProvider.notifier)
-          .removeDeleted(outcome.deletedIds);
-      await ref
-          .read(scanControllerProvider.notifier)
-          .applyDeleted(outcome.deletedIds);
+          .removeDeleted(deletedIds);
+      await ref.read(scanControllerProvider.notifier).applyDeleted(deletedIds);
       if (!mounted) return;
-      final deletedCount = outcome.deletedIds.length;
+      final deletedCount = deletedIds.length;
       final remainingCount = reviewed.length - deletedCount;
       final message = deletedCount == 0
           ? outcome.message ??

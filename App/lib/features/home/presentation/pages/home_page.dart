@@ -105,7 +105,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: const EdgeInsets.all(TidySpacing.lg),
             children: [
               HomeHeader(
-                onHistory: null,
+                onHistory: () => context.push('/bonus/history'),
                 showTitle: !state.running,
                 showHistory: !showEmpty,
                 compact: state.running,

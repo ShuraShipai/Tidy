@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../bonus/services/group_eight_service.dart';
 import '../../scan/controllers/scan_controller.dart';
 import '../../scan/models/scan_state.dart';
 import '../models/contact_record.dart';
@@ -172,6 +175,16 @@ class ContactsController extends AsyncNotifier<ContactsState> {
         emails: emails,
         acknowledgeUnreadableNotes: acknowledgeUnreadableNotes,
       );
+      unawaited(
+        ref.read(groupEightServiceProvider).recordCleanupHistorySafely([
+          {
+            'category': 'Contacts',
+            'count': 1,
+            'bytes': 0,
+            'description': '1 duplicate contact merged',
+          },
+        ]),
+      );
       await refresh();
       return merged;
     } catch (e) {
@@ -197,6 +210,16 @@ class ContactsController extends AsyncNotifier<ContactsState> {
     state = AsyncData(s.copy(message: null));
     try {
       await _repo.delete(records);
+      unawaited(
+        ref.read(groupEightServiceProvider).recordCleanupHistorySafely([
+          {
+            'category': 'Contacts',
+            'count': records.length,
+            'bytes': 0,
+            'description': '${records.length} contacts removed',
+          },
+        ]),
+      );
       await refresh();
     } catch (e) {
       final now = state.value ?? s;
