@@ -8,24 +8,23 @@ import '../../widgets/onboarding_action_bar.dart';
 import '../../widgets/onboarding_page_frame.dart';
 import '../../widgets/splash_identity.dart';
 
-class SplashPage extends ConsumerWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(onboardingProvider);
-    void route(OnboardingState value) {
-      if (!value.initialized) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          context.go(value.completed ? '/home' : '/onboarding/welcome');
-        }
-      });
-    }
+  ConsumerState<SplashPage> createState() => _SplashPageState();
+}
 
-    ref.listen(onboardingProvider, (_, next) => route(next));
-    // Also handles an already initialized provider on a later visit.
-    route(state);
+class _SplashPageState extends ConsumerState<SplashPage> {
+  static const _minimumDisplayTime = Duration(milliseconds: 900);
+  late final DateTime _shownAt = DateTime.now();
+  bool _routing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(onboardingProvider);
+    ref.listen(onboardingProvider, (_, next) => _route(next));
+    _route(state);
     if (state.error != null && !state.initialized) {
       return OnboardingPageFrame(
         body: const SplashIdentity(),
@@ -40,6 +39,20 @@ class SplashPage extends ConsumerWidget {
     }
     return const Scaffold(
       body: TidyPageBackground(child: SafeArea(child: SplashIdentity())),
+    );
+  }
+
+  void _route(OnboardingState state) {
+    if (!state.initialized || _routing) return;
+    _routing = true;
+    final elapsed = DateTime.now().difference(_shownAt);
+    final remaining = _minimumDisplayTime - elapsed;
+    Future<void>.delayed(remaining.isNegative ? Duration.zero : remaining).then(
+      (_) {
+        if (mounted) {
+          context.go(state.completed ? '/home' : '/onboarding/welcome');
+        }
+      },
     );
   }
 }

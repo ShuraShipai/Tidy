@@ -146,19 +146,10 @@ class CleanupReviewPage extends ConsumerWidget {
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.65,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) => CleanupConfirmationSheet(
-          count: plan.itemCount,
-          sizeEstimate: _estimate(plan),
-          photosMayRetainItems: plan.entries.any(
-            (entry) => entry.media != null,
-          ),
-          scrollController: scrollController,
-        ),
+      builder: (_) => CleanupConfirmationSheet(
+        count: plan.itemCount,
+        sizeEstimate: _estimate(plan),
+        photosMayRetainItems: plan.entries.any((entry) => entry.media != null),
       ),
     );
     if (!context.mounted || confirmed != true) return;
