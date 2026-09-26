@@ -98,7 +98,8 @@ class PhotoGroupCard extends StatelessWidget {
           const SizedBox(height: TidySpacing.sm),
           Row(
             children: [
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: TextButton(
                   onPressed: onSelectAllExceptBest,
                   style: TextButton.styleFrom(
@@ -107,9 +108,14 @@ class PhotoGroupCard extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(44, 44),
                   ),
-                  child: const Text('Select All Except Best'),
+                  child: const Text(
+                    'Select All Except Best',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
+              const Spacer(),
               TextButton.icon(
                 onPressed: onCompare,
                 style: TextButton.styleFrom(
