@@ -26,11 +26,7 @@ class WelcomePage extends StatelessWidget {
       primaryLabel: 'Continue',
       onPrimary: () => context.push('/onboarding/privacy'),
       secondaryLabel: 'How It Works',
-      onSecondary: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('How It Works is not available in this preview.'),
-        ),
-      ),
+      onSecondary: () => context.push('/settings/how'),
     ),
   );
 }

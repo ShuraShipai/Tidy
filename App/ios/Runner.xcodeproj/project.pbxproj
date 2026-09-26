@@ -738,7 +738,7 @@
 				INFOPLIST_FILE = TidyWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pinkshoe.tidy.widget.55hffh49ah;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pinkshoe.tidy.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -759,7 +759,7 @@
 				INFOPLIST_FILE = TidyWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pinkshoe.tidy.widget.55hffh49ah;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pinkshoe.tidy.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -780,7 +780,7 @@
 				INFOPLIST_FILE = TidyWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pinkshoe.tidy.widget.55hffh49ah;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pinkshoe.tidy.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;

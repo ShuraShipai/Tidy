@@ -122,7 +122,7 @@ struct TidyStorageWidgetView: View {
 @main
 struct TidyStorageWidget: Widget {
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: "com.example.tidy.storage", provider: TidyStorageProvider()) { entry in
+    StaticConfiguration(kind: "com.pinkshoe.tidy.storage", provider: TidyStorageProvider()) { entry in
       TidyStorageWidgetView(entry: entry)
     }
     .configurationDisplayName("Tidy Storage")

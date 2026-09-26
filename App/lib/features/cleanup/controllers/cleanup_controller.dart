@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../contacts/controllers/contacts_controller.dart';
 import '../../contacts/models/contact_record.dart';
+import '../../bonus/services/group_eight_service.dart';
 import '../../photos/controllers/photo_selection_controller.dart';
 import '../../photos/services/photo_library_service.dart';
 import '../../scan/controllers/scan_controller.dart';
@@ -333,6 +336,33 @@ class CleanupController extends Notifier<CleanupState> {
         remainingEntries: List.unmodifiable(remaining),
         knownBytesDeleted: deletedBytes,
       );
+      if (deleted.isNotEmpty) {
+        final historyRows = <Map<String, Object?>>[];
+        for (final category in CleanupCategory.values) {
+          final categoryEntries = deleted
+              .where((entry) => entry.category == category)
+              .toList(growable: false);
+          if (categoryEntries.isEmpty) continue;
+          final hasUnknownMediaSize = categoryEntries.any(
+            (entry) => entry.media != null && entry.media!.bytes == null,
+          );
+          final isContacts = category == CleanupCategory.duplicateContacts;
+          final bytes = isContacts || hasUnknownMediaSize
+              ? null
+              : categoryEntries.fold<int>(
+                  0,
+                  (sum, entry) => sum + (entry.media?.bytes ?? 0),
+                );
+          historyRows.add({
+            'category': category.label,
+            'count': categoryEntries.length,
+            'bytes': bytes,
+            'description':
+                '${categoryEntries.length} ${category.label.toLowerCase()} removed',
+          });
+        }
+        unawaited(_persistCleanupHistory(historyRows));
+      }
       final phase = result.isComplete
           ? CleanupPhase.complete
           : deleted.isEmpty
@@ -348,6 +378,14 @@ class CleanupController extends Notifier<CleanupState> {
       return result;
     } finally {
       _running = false;
+    }
+  }
+
+  Future<void> _persistCleanupHistory(List<Map<String, Object?>> rows) async {
+    try {
+      await ref.read(groupEightServiceProvider).recordCleanupHistory(rows);
+    } catch (_) {
+      // Cleanup is already verified; history persistence must not change its result.
     }
   }
 }

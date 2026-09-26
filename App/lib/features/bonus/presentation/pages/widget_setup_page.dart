@@ -172,9 +172,7 @@ class _WidgetSetupPageState extends ConsumerState<WidgetSetupPage> {
         'reviewableBytes': snapshot.unknownReviewableSizes > 0
             ? null
             : snapshot.reviewableBytes,
-        'unknownReviewableSizes': snapshot.unknownReviewableSizes,
         'scannedAt': snapshot.lastScanned?.millisecondsSinceEpoch,
-        'updatedAt': DateTime.now().millisecondsSinceEpoch,
       });
       if (mounted) {
         setState(

@@ -57,7 +57,7 @@ class _CleanupHistoryPageState extends ConsumerState<CleanupHistoryPage> {
       }
       return BonusPageFrame(
         title: 'A little more room.',
-        subtitle: 'Completed optional actions saved on this iPhone.',
+        subtitle: 'Confirmed cleanup actions saved on this iPhone.',
         backLabel: 'Optional Features',
         child: snapshot.connectionState == ConnectionState.waiting
             ? const Center(child: CircularProgressIndicator())
@@ -100,13 +100,13 @@ class _CleanupHistoryPageState extends ConsumerState<CleanupHistoryPage> {
                           for (final entry in categories.entries)
                             ListTile(
                               title: Text(entry.key),
-                              trailing: Text(
-                                entry.value == null
-                                    ? 'Size unavailable'
-                                    : entry.value == 0
-                                    ? 'No storage measurement'
-                                    : _size(entry.value!),
-                              ),
+                              trailing: entry.value == null
+                                  ? _sizeUnavailable(context)
+                                  : Text(
+                                      entry.value == 0
+                                          ? 'No storage measurement'
+                                          : _size(entry.value!),
+                                    ),
                             ),
                         ],
                       ),
@@ -129,13 +129,13 @@ class _CleanupHistoryPageState extends ConsumerState<CleanupHistoryPage> {
                         subtitle: Text(
                           '${_date(((row['date'] as num?) ?? 0).round())} · ${(row['count'] as num?)?.toInt() ?? 0} items',
                         ),
-                        trailing: Text(
-                          row['bytes'] == null
-                              ? 'Size unavailable'
-                              : (row['bytes'] as num).toInt() == 0
-                              ? '—'
-                              : _size((row['bytes'] as num).toInt()),
-                        ),
+                        trailing: row['bytes'] == null
+                            ? _sizeUnavailable(context)
+                            : Text(
+                                (row['bytes'] as num).toInt() == 0
+                                    ? '—'
+                                    : _size((row['bytes'] as num).toInt()),
+                              ),
                       ),
                     ),
                   const SizedBox(height: TidySpacing.md),
@@ -165,7 +165,7 @@ class _EmptyHistory extends StatelessWidget {
         ),
         const SizedBox(height: TidySpacing.xs),
         const Text(
-          'Successful, confirmed Group 08 actions will appear here. Nothing is estimated or filled in before it happens.',
+          'Successful, confirmed cleanup actions will appear here. Nothing is estimated or filled in before it happens.',
           textAlign: TextAlign.center,
         ),
       ],
@@ -183,6 +183,18 @@ String _size(int bytes) {
   if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
   return '$bytes B';
 }
+
+Widget _sizeUnavailable(BuildContext context) => SizedBox(
+  width: 88,
+  child: Text(
+    'Size unavailable',
+    maxLines: 1,
+    softWrap: false,
+    overflow: TextOverflow.ellipsis,
+    style: Theme.of(context).textTheme.labelSmall,
+    textAlign: TextAlign.end,
+  ),
+);
 
 String _date(int milliseconds) {
   final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);

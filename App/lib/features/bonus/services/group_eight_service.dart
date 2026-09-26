@@ -116,11 +116,18 @@ class GroupEightService {
       _channel.invokeMethod<void>('compression.discard', {'jobId': jobId});
 
   Future<void> updateWidgetSummary(Map<String, Object?> summary) async {
-    await _channel.invokeMethod<Object?>('widget.update', summary);
+    final propertyListValues = Map<String, Object?>.from(summary)
+      ..removeWhere((key, value) => value == null);
+    await _channel.invokeMethod<Object?>('widget.update', propertyListValues);
   }
 
   Future<List<Map<String, Object?>>> history() async =>
       _rows(await _channel.invokeMethod<Object?>('history.read'));
+
+  Future<void> recordCleanupHistory(List<Map<String, Object?>> rows) async {
+    if (rows.isEmpty) return;
+    await _channel.invokeMethod<void>('history.recordCleanup', {'rows': rows});
+  }
 
   static Map<String, Object?> _map(Object? value) => value is Map
       ? value.map((key, value) => MapEntry(key.toString(), value))

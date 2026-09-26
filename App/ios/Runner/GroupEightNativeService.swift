@@ -103,6 +103,7 @@ final class GroupEightNativeService {
     case "compression.discard": discardCompression(call.arguments, result)
     case "widget.update": updateWidget(call.arguments, result)
     case "history.read": result(readHistory())
+    case "history.recordCleanup": recordCleanupHistory(call.arguments, result)
     default: result(FlutterMethodNotImplemented)
     }
   }
@@ -188,7 +189,7 @@ final class GroupEightNativeService {
     }
     do { try eventStore.commit() }
     catch { result(FlutterError(code: "calendar_delete_failed", message: error.localizedDescription, details: nil)); return }
-    appendHistory(category: "Calendar", count: deleted, bytes: 0, description: "Calendar occurrences removed")
+    try? appendHistory(category: "Calendar", count: deleted, bytes: 0, description: "Calendar occurrences removed")
     DispatchQueue.main.async { result(["deleted": deleted, "failed": failed]) }
   }
 
@@ -506,7 +507,7 @@ final class GroupEightNativeService {
           }
         }
         if !failedEntries.isEmpty { entries.append(contentsOf: failedEntries); try self.writeVaultIndex(entries) }
-        self.appendHistory(category: "Vault Copies", count: removedIDs.count, bytes: freed, description: "Private Vault copies removed")
+        try? self.appendHistory(category: "Vault Copies", count: removedIDs.count, bytes: freed, description: "Private Vault copies removed")
         DispatchQueue.main.async { result(["removed": removedIDs, "failed": failedEntries.count, "remaining": entries.count]) }
       } catch {
         DispatchQueue.main.async { result(FlutterError(code: "vault_remove_failed", message: error.localizedDescription, details: nil)) }
@@ -719,7 +720,7 @@ final class GroupEightNativeService {
       let removed = success && error == nil && remaining == 0
       if removed {
         let bytes = (args["originalBytes"] as? NSNumber)?.int64Value
-        self.appendHistory(category: "Videos", count: 1, bytes: bytes, description: "Original video removed after compression")
+        try? self.appendHistory(category: "Videos", count: 1, bytes: bytes, description: "Original video removed after compression")
         self.lock.lock(); self.exports.removeValue(forKey: id); self.lock.unlock()
       }
       DispatchQueue.main.async { result(["removed": removed, "error": error?.localizedDescription as Any? ?? NSNull()]) }
@@ -768,8 +769,23 @@ final class GroupEightNativeService {
   private func updateWidget(_ arguments: Any?, _ result: @escaping FlutterResult) {
     guard let values = arguments as? [String: Any],
           let defaults = UserDefaults(suiteName: groupID) else { result(FlutterError(code: "widget_unavailable", message: "Tidy’s Home Screen widget storage is unavailable.", details: nil)); return }
-    defaults.set(values, forKey: "tidy.widget.summary")
-    if #available(iOS 14.0, *) { WidgetCenter.shared.reloadAllTimelines() }
+    guard let capacity = values["capacityBytes"] as? NSNumber,
+          let available = values["availableBytes"] as? NSNumber else {
+      result(FlutterError(code: "widget_summary_invalid", message: "A completed storage summary is required to update the widget.", details: nil))
+      return
+    }
+    var summary: [String: Any] = ["capacityBytes": capacity, "availableBytes": available]
+    for key in ["reviewableBytes", "scannedAt"] {
+      if let value = values[key] as? NSNumber { summary[key] = value }
+    }
+    let key = "tidy.widget.summary"
+    if let current = defaults.dictionary(forKey: key),
+       NSDictionary(dictionary: current).isEqual(to: summary) {
+      result(["updated": false])
+      return
+    }
+    defaults.set(summary, forKey: key)
+    if #available(iOS 14.0, *) { WidgetCenter.shared.reloadTimelines(ofKind: "com.pinkshoe.tidy.storage") }
     result(["updated": true])
   }
 
@@ -778,18 +794,39 @@ final class GroupEightNativeService {
     return rows.sorted { (($0["date"] as? NSNumber)?.doubleValue ?? 0) > (($1["date"] as? NSNumber)?.doubleValue ?? 0) }
   }
 
-  private func appendHistory(category: String, count: Int, bytes: Int64?, description: String) {
+  private func recordCleanupHistory(_ arguments: Any?, _ result: @escaping FlutterResult) {
+    guard let values = arguments as? [String: Any],
+          let rows = values["rows"] as? [[String: Any]] else {
+      result(FlutterError(code: "invalid_history", message: "Cleanup history data is invalid.", details: nil))
+      return
+    }
+    do {
+      for row in rows {
+        guard let category = row["category"] as? String,
+              let count = row["count"] as? Int,
+              let description = row["description"] as? String,
+              count > 0 else { continue }
+        let bytes = row["bytes"] as? Int64
+        try appendHistory(category: category, count: count, bytes: bytes, description: description)
+      }
+      result(["recorded": true])
+    } catch {
+      result(FlutterError(code: "history_write_failed", message: "Cleanup history could not be saved on this iPhone.", details: error.localizedDescription))
+    }
+  }
+
+  private func appendHistory(category: String, count: Int, bytes: Int64?, description: String) throws {
     guard count > 0 else { return }
     var rows = readHistory()
     rows.insert(["id": UUID().uuidString, "category": category, "count": count, "bytes": bytes as Any? ?? NSNull(),
                  "description": description, "date": Date().timeIntervalSince1970 * 1000], at: 0)
     rows = Array(rows.prefix(100))
-    if let data = try? JSONSerialization.data(withJSONObject: rows) {
-      try? data.write(to: historyURL, options: .atomic)
-      try? FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: historyURL.path)
-      var values = URLResourceValues(); values.isExcludedFromBackup = true
-      var url = historyURL; try? url.setResourceValues(values)
-    }
+    try FileManager.default.createDirectory(at: historyURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let data = try JSONSerialization.data(withJSONObject: rows)
+    try data.write(to: historyURL, options: .atomic)
+    try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: historyURL.path)
+    var values = URLResourceValues(); values.isExcludedFromBackup = true
+    var url = historyURL; try url.setResourceValues(values)
   }
 }
 
